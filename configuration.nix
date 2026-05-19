@@ -2,8 +2,10 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./keybindings.nix
   ];
 
+# Defining the core system details is done in this file whilst other parts are imported instead.
   nix.settings.experimental-features = [
     "nix-command"
     "flakes" ];
@@ -159,15 +161,6 @@
 
     (pkgs.ollama.override {
       acceleration = "cuda";
-    })
-
-    (makeDesktopItem {
-      name = "equibop-wayland";
-      desktopName = "equibop";
-      genericName = "Discord client";
-      categories = [ "Network" "Chat" ];
-      exec = "env NIXOS_OZONE_WL=1 ELECTRON_OZONE_PLATFORM_HINT=wayland equibop --ozone-platform=wayland";
-      terminal = false;
     })
   ];
 
