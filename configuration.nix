@@ -1,14 +1,25 @@
 { config, lib, pkgs, ... }:
+
+let
+  pkgsFixed = pkgs.extend (final: prev: {
+    openldap = prev.openldap.overrideAttrs (old: {
+      doCheck = false;
+    });
+  });
+in
 {
   imports = [
     ./hardware-configuration.nix
-    ./keybindings.nix
+    ./modules/river.nix
+    # Since I have VIA on my keyboard this is not needed
+    # ./keyboard.nix
   ];
 
-# Defining the core system details is done in this file whilst other parts are imported instead.
+  # Defining the core system details is done in this file whilst other parts are imported instead.
   nix.settings.experimental-features = [
     "nix-command"
-    "flakes" ];
+    "flakes"
+  ];
 
   nixpkgs.config.allowUnfree = true;
 
@@ -27,7 +38,11 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   hardware.enableRedistributableFirmware = true;
-  hardware.graphics.enable = true;
+
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
   services.xserver.videoDrivers = [ "nvidia" ];
 
@@ -35,6 +50,11 @@
     modesetting.enable = true;
     powerManagement.enable = false;
     open = false;
+  };
+
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
   };
 
   services.openssh.enable = true;
@@ -54,11 +74,12 @@
   services.greetd = {
     enable = true;
     settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --cmd river --remember";
+      command = "${pkgs.tuigreet}/bin/tuigreet --cmd 'river -c /etc/river/init' --remember";
       user = "greeter";
     };
   };
 
+  environment.localBinInPath = true;
   xdg.portal = {
     enable = true;
 
@@ -106,74 +127,82 @@
     NIXOS_OZONE_WL = "1";
   };
 
-  environment.systemPackages = with pkgs; [
-    equibop
-
-# Cool browser.
-#   surf
-
-    claude-code
-    rustfmt
-    clippy
-    mpv
-    zathura
-    fzf
-    swaybg
-    mangohud
-    vim
-    cargo
-    rustc
-    wget
-    git
-    neovim
-    fastfetch
-    ripgrep
-    gcc
-    river-classic
-    waybar
-    wl-clipboard
-    grim
-    slurp
-    tofi
-    bemenu
-    chezmoi
-    rio
-    fish
-    tmux
-    tmuxp
-    nnn
-    nodejs
-    htop
-    shaderc
-    pkg-config
-    wayland
-    libxkbcommon
-    vulkan-loader
-    vulkan-headers
-    vulkan-tools
-    git-lfs
-    cmake
-    hyperfine
-    wlsunset
-    qutebrowser
-    krita
-    wf-recorder
-
-    (pkgs.ollama.override {
-      acceleration = "cuda";
-    })
-  ];
-
-  services.ollama.enable = true;
-
-  programs.river-classic.enable = true;
-  programs.thunar.enable = true;
+  programs.gamemode.enable = true;
 
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
   };
+
+  programs.thunar.enable = true;
+
+  services.ollama.enable = true;
+
+  environment.systemPackages =
+    (with pkgsFixed; [
+      lutris
+      wineWow64Packages.staging
+      winetricks
+    ])
+    ++
+    (with pkgs; [
+      equibop
+
+      # Cool browser.
+      # surf
+      claude-code
+      rustfmt
+      clippy
+      mpv
+      zathura
+      fzf
+      swaybg
+      mangohud
+      gamemode
+      vim
+      cargo
+      rustc
+      wget
+      git
+      neovim
+      fastfetch
+      ripgrep
+      gcc
+      river
+      waybar
+      wl-clipboard
+      grim
+      slurp
+      tofi
+      bemenu
+      chezmoi
+      rio
+      fish
+      tmux
+      tmuxp
+      nnn
+      nodejs
+      htop
+      shaderc
+      pkg-config
+      wayland
+      libxkbcommon
+      vulkan-loader
+      vulkan-headers
+      vulkan-tools
+      git-lfs
+      cmake
+      hyperfine
+      wlsunset
+      qutebrowser
+      krita
+      wf-recorder
+
+      (pkgs.ollama.override {
+        acceleration = "cuda";
+      })
+    ]);
 
   system.stateVersion = "25.11";
 }
