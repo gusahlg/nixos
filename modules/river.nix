@@ -6,12 +6,21 @@ let
 
   font = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
 
-  # Use absolute Nix store paths for programs that should be guaranteed.
+  # ─── Border config — single-color outlines ──────────────────────────
+  # Hex values are straight RGBA (RR GG BB AA), the same form
+  # riverctl's `border-color-*` commands accepted; gharial premultiplies
+  # alpha internally per the wayland protocol. Full alpha gives vivid
+  # colours — drop AA to soften.
+  borderWidth          = 3;
+  borderColorFocused   = "0xC8324BFF";
+  borderColorUnfocused = "0x00C896FF";
+
+  # ─── Absolute store-pinned binary paths ─────────────────────────────
   dbusUpdateActivationEnvironment = "${pkgs.dbus}/bin/dbus-update-activation-environment";
   systemctl = "${pkgs.systemd}/bin/systemctl";
 
-# gharial = "${pkgs.gharial}/bin/gharial";
-# gharialctl = "${pkgs.gharial}/bin/gharialctl";
+  # gharial binaries — currently user-installed under ~/.local/bin. Swap
+  # to `${pkgs.gharial}/bin/...` once a nix package exists.
   gharial = "/home/gusahlg/.local/bin/gharial";
   gharialctl = "/home/gusahlg/.local/bin/gharialctl";
 
@@ -33,6 +42,11 @@ let
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
   playerctl = "${pkgs.playerctl}/bin/playerctl";
 
+  # Personal tmux/tmuxp launchers — paths under $HOME, expanded by the
+  # init script at runtime.
+  loadDevSession = "$HOME/.local/share/load-repos";
+  loadSession    = "$HOME/.local/share/load-session";
+
 in
 {
   environment.systemPackages = [
@@ -53,6 +67,15 @@ in
     pkgs.playerctl
     pkgs.nerd-fonts.hack
   ];
+
+  # ─── Keyboard layout (replaces `riverctl keyboard-layout se`) ────────
+  # wlroots reads XKB_DEFAULT_* from the environment at startup. Setting
+  # via sessionVariables propagates through /etc/profile to greetd-launched
+  # wayland sessions. gharial does not expose a layout command — owning
+  # XKB is a compositor concern, not a WM concern.
+  environment.sessionVariables = {
+    XKB_DEFAULT_LAYOUT = "se";
+  };
 
   environment.etc."river/init" = {
     mode = "0755";
@@ -81,43 +104,63 @@ in
       ${gharialctl} set main-ratio 0.55
       ${gharialctl} set smart-gaps on
 
+      # ─── Borders (single-color outlines) ───────────────────────────────
+      ${gharialctl} set border-width ${toString borderWidth}
+      ${gharialctl} set border-color-focused   ${borderColorFocused}
+      ${gharialctl} set border-color-unfocused ${borderColorUnfocused}
+
       # ─── Application keybindings ────────────────────────────────────────
       ${gharialctl} bind "$mod+Q"      spawn ${rio}
       ${gharialctl} bind "$mod+T"      spawn ${qutebrowser}
       ${gharialctl} bind "$mod+E"      spawn ${thunar}
       ${gharialctl} bind "$mod+C"      close
+      ${gharialctl} bind "$mod+V"      toggle-float
       ${gharialctl} bind "$mod+R"      spawn ${tofiDrun} --drun-launch=true --font "$FONT" --height 1000 --width 500 --font-size 12
       ${gharialctl} bind "$mod+D"      spawn ${rio} -e ${nvim} "$HOME/DOCUMENTATION.txt"
 
-      # ─── Focus and swap ─────────────────────────────────────────────────
-      ${gharialctl} bind "$mod+H"        focus prev
-      ${gharialctl} bind "$mod+L"        focus next
-      ${gharialctl} bind "$mod+K"        focus prev
-      ${gharialctl} bind "$mod+J"        focus next
+      # ─── Focus and swap — HJKL is directional (layout-agnostic) ────────
+      ${gharialctl} bind "$mod+H"        focus left
+      ${gharialctl} bind "$mod+L"        focus right
+      ${gharialctl} bind "$mod+K"        focus up
+      ${gharialctl} bind "$mod+J"        focus down
 
-      ${gharialctl} bind "$mod+Shift+H"  swap prev
-      ${gharialctl} bind "$mod+Shift+L"  swap next
-      ${gharialctl} bind "$mod+Shift+K"  swap prev
-      ${gharialctl} bind "$mod+Shift+J"  swap next
+      ${gharialctl} bind "$mod+Shift+H"  swap left
+      ${gharialctl} bind "$mod+Shift+L"  swap right
+      ${gharialctl} bind "$mod+Shift+K"  swap up
+      ${gharialctl} bind "$mod+Shift+J"  swap down
 
-      # ─── Tags ───────────────────────────────────────────────────────────
+      # ─── Tags (1-10; '0' key targets tag 10) ───────────────────────────
       for i in 1 2 3 4 5 6 7 8 9 10; do
           if [ "$i" -eq 10 ]; then
               key=0
           else
               key=$i
           fi
-
           ${gharialctl} bind "$mod+$key"        tag focus "$i"
           ${gharialctl} bind "$mod+Shift+$key"  tag move  "$i"
       done
 
-      # ─── tile_ratio mode ────────────────────────────────────────────────
+      # ─── Modes ──────────────────────────────────────────────────────────
+      # tile_ratio: nudge the master/stack split with H/L.
       ${gharialctl} bind "$mod+B"                       mode tile_ratio
       ${gharialctl} bind --mode tile_ratio "$mod+H"     main-ratio -0.05
       ${gharialctl} bind --mode tile_ratio "$mod+L"     main-ratio +0.05
       ${gharialctl} bind --mode tile_ratio "$mod+B"     mode exit
       ${gharialctl} bind --mode tile_ratio Escape       mode exit
+
+      # sessions: load tmuxp-defined sessions in a fresh rio terminal.
+      ${gharialctl} bind "$mod+Tab"                     mode sessions
+      ${gharialctl} bind --mode sessions 1     spawn ${rio} -e ${loadDevSession} repos
+      ${gharialctl} bind --mode sessions 2     spawn ${rio} -e ${loadDevSession} 1_inspect
+      ${gharialctl} bind --mode sessions 3     spawn ${rio} -e ${loadDevSession} 2_inspect
+      ${gharialctl} bind --mode sessions 4     spawn ${rio} -e ${loadDevSession} 3_inspect
+      ${gharialctl} bind --mode sessions 5     spawn ${rio} -e ${loadDevSession} 4_inspect
+      ${gharialctl} bind --mode sessions 6     spawn ${rio} -e ${loadDevSession} 5_inspect
+      ${gharialctl} bind --mode sessions 7     spawn ${rio} -e ${loadDevSession} 6_inspect
+      ${gharialctl} bind --mode sessions 8     spawn ${rio} -e ${loadDevSession} 7_inspect
+      ${gharialctl} bind --mode sessions 9     spawn ${rio} -e ${loadDevSession} 8_inspect
+      ${gharialctl} bind --mode sessions 0     spawn ${rio} -e ${loadSession}    config
+      ${gharialctl} bind --mode sessions Escape mode exit
 
       # ─── Utilities ──────────────────────────────────────────────────────
       ${gharialctl} bind "$mod+F1" spawn "$HOME/.local/share/night-light"
