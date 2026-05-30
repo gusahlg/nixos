@@ -33,5 +33,7 @@
     ./home/mpv.nix
     ./home/htop.nix
     ./home/fonts.nix
+    ./home/tmux.nix
+    ./home/tmuxp.nix
   ];
 }
