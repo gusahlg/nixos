@@ -26,7 +26,7 @@ let
 
   rio = "${pkgs.rio}/bin/rio";
   qutebrowser = "${pkgs.qutebrowser}/bin/qutebrowser";
-  thunar = "${pkgs.xfce.thunar}/bin/thunar";
+  thunar = "${pkgs.thunar}/bin/thunar";
   nvim = "${pkgs.neovim}/bin/nvim";
   tofiDrun = "${pkgs.tofi}/bin/tofi-drun";
 
@@ -53,7 +53,7 @@ in
     pkgs.river
     pkgs.rio
     pkgs.qutebrowser
-    pkgs.xfce.thunar
+    pkgs.thunar
     pkgs.neovim
     pkgs.tofi
     pkgs.waybar
@@ -116,7 +116,7 @@ in
       ${gharialctl} bind "$mod+C"      close
       ${gharialctl} bind "$mod+V"      toggle-float
       ${gharialctl} bind "$mod+R"      spawn ${tofiDrun} --drun-launch=true --font "$FONT" --height 1000 --width 500 --font-size 12
-      ${gharialctl} bind "$mod+D"      spawn ${rio} -e ${nvim} "$HOME/DOCUMENTATION.txt"
+      ${gharialctl} bind "$mod+D"      spawn ${rio} -e ${nvim} "$HOME/Notes"
 
       # ─── Focus and swap — HJKL is directional (layout-agnostic) ────────
       ${gharialctl} bind "$mod+H"        focus left
