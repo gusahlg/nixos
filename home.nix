@@ -12,40 +12,26 @@
     fastfetch
     ripgrep
     fd
+    rust-analyzer
   ];
 
-  programs.fish = {
-    enable = true;
-
-    shellAliases = {
-      ll = "ls -la";
-      gs = "git status";
-      rebuild = "sudo nixos-rebuild switch";
-    };
-
-    interactiveShellInit = ''
-      set fish_greeting
-    '';
+  home.sessionVariables = {
+    EDITOR = "nvim";
   };
+  home.sessionPath = [
+    "$HOME/.local/bin"
+  ];
 
-  programs.fastfetch = {
-    enable = true;
-
-    settings = {
-      logo.source = "nixos";
-      display.separator = "  ";
-      modules = [
-        "title"
-        "os"
-        "kernel"
-        "uptime"
-        "packages"
-        "shell"
-        "terminal"
-        "cpu"
-        "gpu"
-        "memory"
-      ];
-    };
-  };
+  imports = [
+    ./home/fish.nix
+    ./home/fastfetch.nix
+    ./home/mangohud.nix
+    ./home/rio.nix
+    ./home/nvim.nix
+    ./home/qutebrowser.nix
+    ./home/git.nix
+    ./home/mpv.nix
+    ./home/htop.nix
+    ./home/fonts.nix
+  ];
 }
