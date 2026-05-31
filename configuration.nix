@@ -13,6 +13,7 @@ in
     ./modules/river.nix
     # Since I have VIA on my keyboard this is not needed
     # ./keyboard.nix
+    ./modules/scripts.nix
   ];
 
   # Defining the core system details is done in this file whilst other parts are imported instead.

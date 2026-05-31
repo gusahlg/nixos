@@ -17,9 +17,6 @@
       editor.command = [ "rio" "-e" "nvim" "{file}" ];
 
       url = {
-        searchengines = {
-          DEFAULT = "https://search.brave.com/search?q={}";
-        };
         start_pages = [ "https://search.brave.com" ];
         default_page = "https://search.brave.com";
       };
@@ -65,6 +62,9 @@
     };
 
     extraConfig = ''
+      c.url.searchengines = {
+          "DEFAULT": "https://search.brave.com/search?q={}",
+      }
       c.url.yank_ignored_parameters += ["fbclid", "si"]
     '';
 

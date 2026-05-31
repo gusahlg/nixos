@@ -1,5 +1,5 @@
 # /etc/nixos/modules/river.nix
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 let
   mod = "Super";
@@ -42,10 +42,19 @@ let
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
   playerctl = "${pkgs.playerctl}/bin/playerctl";
 
-  # Personal tmux/tmuxp launchers — paths under $HOME, expanded by the
-  # init script at runtime.
-  loadDevSession = "$HOME/.local/share/load-repos";
-  loadSession    = "$HOME/.local/share/load-session";
+  # Personal tmux/tmuxp launchers — built from ../scripts/*.nix and
+  # pinned to the nix store.
+  loadProjectPkg = import ../scripts/load-project.nix { inherit pkgs lib; };
+  loadSessionPkg = import ../scripts/load-session.nix { inherit pkgs lib; };
+  nightLightPkg  = import ../scripts/night-light.nix  { inherit pkgs; };
+  recordPkg      = import ../scripts/record.nix       { inherit pkgs; };
+  recordStopPkg  = import ../scripts/record-stop.nix  { inherit pkgs; };
+
+  loadDevSession = "${loadProjectPkg}/bin/load-project";
+  loadSession    = "${loadSessionPkg}/bin/tmuxp-session";
+  nightLight     = "${nightLightPkg}/bin/toggle-night-light";
+  record         = "${recordPkg}/bin/toggle-recording";
+  recordStop     = "${recordStopPkg}/bin/copy-latest-recording";
 
 in
 {
@@ -163,12 +172,12 @@ in
       ${gharialctl} bind --mode sessions Escape mode exit
 
       # ─── Utilities ──────────────────────────────────────────────────────
-      ${gharialctl} bind "$mod+F1" spawn "$HOME/.local/share/night-light"
+      ${gharialctl} bind "$mod+F1" spawn ${nightLight}
 
       ${gharialctl} bind "$mod+Z" spawn sh -c 'mkdir -p "$HOME/Pictures/Screenshots" && ${grim} -g "$(${slurp})" - | tee "$HOME/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png" | ${wlCopy}'
 
-      ${gharialctl} bind "$mod+X"        spawn "$HOME/.local/share/rec"
-      ${gharialctl} bind "$mod+Shift+X"  spawn "$HOME/.local/share/rec-stop"
+      ${gharialctl} bind "$mod+X"        spawn ${record}
+      ${gharialctl} bind "$mod+Shift+X"  spawn ${recordStop}
 
       # ─── Media keys ─────────────────────────────────────────────────────
       ${gharialctl} bind XF86AudioRaiseVolume spawn ${wpctl} set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
