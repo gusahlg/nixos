@@ -7,7 +7,7 @@ let
     });
   });
 in
-{
+{  
   imports = [
     ./hardware-configuration.nix
     ./modules/river.nix
@@ -23,6 +23,35 @@ in
   ];
 
   nixpkgs.config.allowUnfree = true;
+
+# TEMPORARY SOLUTION
+  nixpkgs.overlays = [
+    (final: prev: {
+      gharial = final.rustPlatform.buildRustPackage rec {
+        pname = "gharial";
+        version = "0.2.1";
+
+        src = final.fetchFromGitHub {
+          owner = "gusahlg";
+          repo = "gharial";
+          rev = "main";
+          hash = "sha256-o5r8nK95FE5lBMLZfqziEE7JGOAO0HQfxFcybMWee9s=";
+        };
+
+        cargoHash = "sha256-Fqhgdqs7xXmd6Bpg7kYLWLiu+Yn4JTbMtJo4iLLFcIs=";
+
+        nativeBuildInputs = [
+          final.pkg-config
+        ];
+
+        buildInputs = [
+          final.wayland
+          final.libxkbcommon
+        ];
+      };
+    })
+  ];
+# TEMPORARY ENDS HERE
 
   networking.hostName = "sighurt";
   networking.networkmanager.enable = true;
@@ -153,6 +182,7 @@ in
       # Cool browser.
       # surf
       claude-code
+      gharial
       rustfmt
       clippy
       mpv

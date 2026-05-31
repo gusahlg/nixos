@@ -21,8 +21,8 @@ let
 
   # gharial binaries — currently user-installed under ~/.local/bin. Swap
   # to `${pkgs.gharial}/bin/...` once a nix package exists.
-  gharial = "/home/gusahlg/.local/bin/gharial";
-  gharialctl = "/home/gusahlg/.local/bin/gharialctl";
+  gharial = "${pkgs.gharial}/bin/gharial";
+  gharialctl = "${pkgs.gharial}/bin/gharialctl";
 
   rio = "${pkgs.rio}/bin/rio";
   qutebrowser = "${pkgs.qutebrowser}/bin/qutebrowser";
@@ -61,6 +61,7 @@ in
   environment.systemPackages = [
     pkgs.river
     pkgs.rio
+    pkgs.gharial
     pkgs.qutebrowser
     pkgs.thunar
     pkgs.neovim
