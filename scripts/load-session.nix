@@ -27,6 +27,6 @@ pkgs.writeTextFile {
         exec tmux attach -t "$name"
     end
 
-    exec tmuxp load -y "$HOME/.tmuxp/$name.yaml"
+    exec tmuxp load -y "$HOME/.config/tmuxp/$name.yaml"
   '';
 }

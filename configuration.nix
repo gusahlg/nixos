@@ -183,6 +183,7 @@ in
       # surf
       claude-code
       gharial
+      xwayland
       rustfmt
       clippy
       mpv
