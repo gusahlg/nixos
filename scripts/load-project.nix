@@ -38,6 +38,12 @@ pkgs.writeTextFile {
     set -gx SESSION_NAME "$argv[1]"
     set -gx PROJECT_DIR "$target"
 
-    exec tmuxp load -y "$HOME/.config/tmuxp/dev_env.yaml"
+    tmuxp load -y "$HOME/.config/tmuxp/dev_env.yaml"
+    or begin
+        set -l ec $status
+        echo
+        echo "tmuxp exited with status $ec — press enter to close"
+        read
+    end
   '';
 }

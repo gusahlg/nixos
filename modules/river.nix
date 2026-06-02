@@ -160,15 +160,15 @@ in
 
       # sessions: load tmuxp-defined sessions in a fresh rio terminal.
       ${gharialctl} bind "$mod+Tab"                     mode sessions
-      ${gharialctl} bind --mode sessions 1     spawn ${rio} -e ${loadDevSession} repos
-      ${gharialctl} bind --mode sessions 2     spawn ${rio} -e ${loadDevSession} 1_inspect
-      ${gharialctl} bind --mode sessions 3     spawn ${rio} -e ${loadDevSession} 2_inspect
-      ${gharialctl} bind --mode sessions 4     spawn ${rio} -e ${loadDevSession} 3_inspect
-      ${gharialctl} bind --mode sessions 5     spawn ${rio} -e ${loadDevSession} 4_inspect
-      ${gharialctl} bind --mode sessions 6     spawn ${rio} -e ${loadDevSession} 5_inspect
-      ${gharialctl} bind --mode sessions 7     spawn ${rio} -e ${loadDevSession} 6_inspect
-      ${gharialctl} bind --mode sessions 8     spawn ${rio} -e ${loadDevSession} 7_inspect
-      ${gharialctl} bind --mode sessions 9     spawn ${rio} -e ${loadDevSession} 8_inspect
+      ${gharialctl} bind --mode sessions 1     spawn ${rio} -e ${loadDevSession} project-1
+      ${gharialctl} bind --mode sessions 2     spawn ${rio} -e ${loadDevSession} project-2
+      ${gharialctl} bind --mode sessions 3     spawn ${rio} -e ${loadDevSession} project-3
+      ${gharialctl} bind --mode sessions 4     spawn ${rio} -e ${loadDevSession} project-4
+      ${gharialctl} bind --mode sessions 5     spawn ${rio} -e ${loadDevSession} project-5
+      ${gharialctl} bind --mode sessions 6     spawn ${rio} -e ${loadDevSession} project-6
+      ${gharialctl} bind --mode sessions 7     spawn ${rio} -e ${loadDevSession} project-7
+      ${gharialctl} bind --mode sessions 8     spawn ${rio} -e ${loadDevSession} project-8
+      ${gharialctl} bind --mode sessions 9     spawn ${rio} -e ${loadDevSession} project-9
       ${gharialctl} bind --mode sessions 0     spawn ${rio} -e ${loadSession}    config
       ${gharialctl} bind --mode sessions Escape mode exit
 

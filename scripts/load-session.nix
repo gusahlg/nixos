@@ -27,6 +27,12 @@ pkgs.writeTextFile {
         exec tmux attach -t "$name"
     end
 
-    exec tmuxp load -y "$HOME/.config/tmuxp/$name.yaml"
+    tmuxp load -y "$HOME/.config/tmuxp/$name.yaml"
+    or begin
+        set -l ec $status
+        echo
+        echo "tmuxp exited with status $ec — press enter to close"
+        read
+    end
   '';
 }
