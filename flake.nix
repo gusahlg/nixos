@@ -10,13 +10,13 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }: 
+  outputs = { self, nixpkgs, home-manager, ... }:
   {
     nixosConfigurations.sighurt = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
 
       modules = [
-        ./configuration.nix
+        ./hosts/desktop/configuration.nix
 
         home-manager.nixosModules.home-manager
         {
@@ -25,6 +25,14 @@
           home-manager.backupFileExtension = "backup";
           home-manager.users.gusahlg = import ./home.nix;
         }
+      ];
+    };
+
+    nixosConfigurations.sighurt-server = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+
+      modules = [
+        ./hosts/server/configuration.nix
       ];
     };
   };
