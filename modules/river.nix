@@ -176,6 +176,7 @@ in
       ${gharialctl} bind "$mod+F1" spawn ${nightLight}
 
       ${gharialctl} bind "$mod+Z" spawn sh -c 'mkdir -p "$HOME/Pictures/Screenshots" && ${grim} -g "$(${slurp})" - | tee "$HOME/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png" | ${wlCopy}'
+      ${gharialctl} bind "$mod+Ctrl+Z" spawn sh -c 'mkdir -p "$HOME/Pictures/hall-of-fame" && ${grim} -g "$(${slurp})" - | tee "$HOME/Pictures/hall-of-fame/$(date +%Y-%m-%d_%H-%M-%S).png" | ${wlCopy}'
 
       ${gharialctl} bind "$mod+X"        spawn ${record}
       ${gharialctl} bind "$mod+Shift+X"  spawn ${recordStop}

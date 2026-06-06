@@ -9,6 +9,8 @@ let
     record-stop = import ../scripts/record-stop.nix { inherit pkgs; };
 
     night-light = import ../scripts/night-light.nix { inherit pkgs; };
+
+    switch-reboot = import ../scripts/switch-reboot.nix { inherit pkgs; };
 in
 {
     environment.systemPackages = [
@@ -17,5 +19,6 @@ in
         record
         record-stop
         night-light
+        switch-reboot
     ];
 }
