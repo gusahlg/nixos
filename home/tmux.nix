@@ -35,6 +35,9 @@
       # Reload config
       bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux reloaded"
 
+      # Kill current session
+      bind c tmux kill-session
+
       # Window navigation (Alt+N)
       bind -n M-1 select-window -t 1
       bind -n M-2 select-window -t 2
@@ -45,7 +48,7 @@
       # Sessions
       bind s choose-tree -sZ
       bind S command-prompt -p "new session:" "new-session -s '%%'"
-      bind f display-popup -E "fish -lc ~/.local/share/repo-select"
+      bind f display-popup -E "fish -lc /bin/load-project"
 
       # Copy mode (vi style)
       bind Escape copy-mode

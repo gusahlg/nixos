@@ -35,5 +35,68 @@
     ./home/fonts.nix
     ./home/tmux.nix
     ./home/tmuxp.nix
+    ./home/zoxide.nix
   ];
+
+  # Global ignore file for `fd`. Keeps the project-picker (and ad-hoc `fd`
+  # use) from descending into bulk-data, cache, vendored and credential
+  # trees. The picker in scripts/load-project.nix relies on this.
+  home.file.".fdignore".text = ''
+    # Bulk data / caches
+    .cache/
+    .local/
+    .steam/
+    .var/
+    .factorio/
+    .paradoxlauncher/
+    My Games/
+    Games/
+    ai-data/
+    TinyStories/
+    browser-benchmark-results/
+    Downloads/
+    Pictures/
+    Videos/
+    PDX/
+
+    # Language / package caches
+    .cargo/registry/
+    .cargo/git/
+    .rustup/
+    .npm/
+    .npm-global/
+    .ollama/
+    .nv/
+    .gradle/
+    .m2/repository/
+    .pyenv/
+    .rbenv/
+    .nvm/
+
+    # Vendored / build output
+    node_modules/
+    target/
+    dist/
+    build/
+    .next/
+    .venv/
+    venv/
+    __pycache__/
+    .mypy_cache/
+    .pytest_cache/
+    .tox/
+    .terraform/
+    .direnv/
+    vendor/
+    .git/
+
+    # Credential / browser state
+    .ssh/
+    .gnupg/
+    .pki/
+    .mozilla/
+    .thunderbird/
+    .config/google-chrome/
+    .config/chromium/
+  '';
 }
