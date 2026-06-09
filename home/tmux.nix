@@ -15,6 +15,7 @@
     extraConfig = ''
       # Unbind bindings
       unbind f
+      unbind c
 
       # Window/pane numbering
       setw -g pane-base-index 1
