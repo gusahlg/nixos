@@ -201,6 +201,8 @@ in
       fastfetch
       ripgrep
       gcc
+      clang
+      ninja
       river
       waybar
       wl-clipboard
@@ -217,12 +219,16 @@ in
       nodejs
       htop
       shaderc
+      glslang
+      spirv-tools
+      spirv-headers
       pkg-config
       wayland
       libxkbcommon
       vulkan-loader
       vulkan-headers
       vulkan-tools
+      vulkan-validation-layers
       git-lfs
       cmake
       hyperfine
@@ -231,10 +237,33 @@ in
       krita
       wf-recorder
 
+      # CUDA
+      cudatoolkit
+      cudaPackages.libcublas
+
+      # BLAS / LAPACK
+      openblas
+      blas
+      lapack
+
+      # Python + scientific/ML stack
+      (python3.withPackages (ps: with ps; [
+        numpy
+        scipy
+        torch
+        onnxruntime
+      ]))
+
+      # Profiling / monitoring
+      nvtopPackages.full
+
       (pkgs.ollama.override {
         acceleration = "cuda";
       })
-    ]);
+    ])
+    ++ [
+      config.boot.kernelPackages.perf
+    ];
 
   system.stateVersion = "25.11";
 }

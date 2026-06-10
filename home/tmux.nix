@@ -37,7 +37,7 @@
       bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux reloaded"
 
       # Kill current session
-      bind c tmux kill-session
+      bind c kill-session
 
       # Window navigation (Alt+N)
       bind -n M-1 select-window -t 1
