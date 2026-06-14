@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, concord, ... }:
 
 let
   pkgsFixed = pkgs.extend (final: prev: {
@@ -184,6 +184,7 @@ in
       claude-code
       gharial
       xwayland
+      concord.packages.${pkgs.system}.default
       rustfmt
       clippy
       mpv

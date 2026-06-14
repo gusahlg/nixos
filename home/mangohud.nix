@@ -3,7 +3,7 @@
     enable = true;
 
     settings = {
-      fps_limit = 40;
+      fps_limit = 25;
       vsync = 1;
     };
   };
