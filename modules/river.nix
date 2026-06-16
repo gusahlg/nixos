@@ -44,13 +44,15 @@ let
 
   # Personal tmux/tmuxp launchers — built from ../scripts/*.nix and
   # pinned to the nix store.
-  loadProjectPkg = import ../scripts/load-project.nix { inherit pkgs lib; };
+  createNewSessionPkg = import ../scripts/create-session.nix { inherit pkgs lib; };
+  attachSessionPkg = import ../scripts/attach-session.nix { inherit pkgs lib; };
   loadSessionPkg = import ../scripts/load-session.nix { inherit pkgs lib; };
   nightLightPkg  = import ../scripts/night-light.nix  { inherit pkgs; };
   recordPkg      = import ../scripts/record.nix       { inherit pkgs; };
   recordStopPkg  = import ../scripts/record-stop.nix  { inherit pkgs; };
 
-  loadDevSession = "${loadProjectPkg}/bin/load-project";
+  createNewSession = "${createNewSessionPkg}/bin/create-session";
+  attachSession  = "${attachSessionPkg}/bin/attach-session";
   loadSession    = "${loadSessionPkg}/bin/tmuxp-session";
   nightLight     = "${nightLightPkg}/bin/toggle-night-light";
   record         = "${recordPkg}/bin/toggle-recording";
@@ -158,19 +160,12 @@ in
       ${gharialctl} bind --mode tile_ratio "$mod+B"     mode exit
       ${gharialctl} bind --mode tile_ratio Escape       mode exit
 
-      # sessions: load tmuxp-defined sessions in a fresh rio terminal.
-      ${gharialctl} bind "$mod+Tab"                     mode sessions
-      ${gharialctl} bind --mode sessions 1     spawn ${rio} -e ${loadDevSession} project-1
-      ${gharialctl} bind --mode sessions 2     spawn ${rio} -e ${loadDevSession} project-2
-      ${gharialctl} bind --mode sessions 3     spawn ${rio} -e ${loadDevSession} project-3
-      ${gharialctl} bind --mode sessions 4     spawn ${rio} -e ${loadDevSession} project-4
-      ${gharialctl} bind --mode sessions 5     spawn ${rio} -e ${loadDevSession} project-5
-      ${gharialctl} bind --mode sessions 6     spawn ${rio} -e ${loadDevSession} project-6
-      ${gharialctl} bind --mode sessions 7     spawn ${rio} -e ${loadDevSession} project-7
-      ${gharialctl} bind --mode sessions 8     spawn ${rio} -e ${loadDevSession} project-8
-      ${gharialctl} bind --mode sessions 9     spawn ${rio} -e ${loadDevSession} project-9
-      ${gharialctl} bind --mode sessions 0     spawn ${rio} -e ${loadSession}    config
-      ${gharialctl} bind --mode sessions Escape mode exit
+      # creates a new tmux development session
+      ${gharialctl} bind "$mod+Tab" spawn ${rio} -e ${createNewSession}
+
+      # fuzzy-find and attach a running tmux development session
+      ${gharialctl} bind "$mod+Shift+Tab" spawn ${rio} -e ${attachSession}
+
 
       # ─── Utilities ──────────────────────────────────────────────────────
       ${gharialctl} bind "$mod+F1" spawn ${nightLight}
