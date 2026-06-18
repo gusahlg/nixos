@@ -1,0 +1,22 @@
+# Concord keymap — kept close to the neovim (AstroNvim) setup so the two
+# share muscle memory. The big ones are already concord defaults and need no
+# config here:
+#
+#   • <Space> is the leader (same as AstroNvim).
+#   • h/j/k/l move, gg / G jump top/bottom, <C-d> / <C-u> half-page scroll.
+#   • / opens the pane filter/search, q closes popups.
+#
+# Only the handful of bindings below are overridden to reinforce nvim reflexes.
+
+[keymap]
+# In nvim <leader>f finds files; here the same reflex finds a channel.
+# The stock <leader><leader> is kept as an alias.
+ChannelSwitcher = { keys = ["<leader>f", "<leader><leader>"], description = "find channel" }
+
+# gd = "go to definition" in nvim; here g-then-d jumps to the referenced /
+# replied message. Sits naturally next to gg (jump top) under the g prefix.
+GoToReferencedMessage = "gd"
+
+[keymap.message_actions]
+# Keep the in-menu shortcut for the same action on plain "g".
+GoToReferencedMessage = { keys = ["g"], description = "go to referenced message" }

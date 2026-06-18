@@ -183,6 +183,7 @@ in
       # surf
       claude-code
       gharial
+      heroic
       xwayland
       concord.packages.${pkgs.system}.default
       rustfmt
@@ -198,6 +199,7 @@ in
       rustc
       wget
       git
+      unzip
       neovim
       fastfetch
       ripgrep

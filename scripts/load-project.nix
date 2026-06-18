@@ -48,7 +48,13 @@ pkgs.writeTextFile {
     __lp_refresh_dirs $cache &
     disown 2>/dev/null
 
+    # `fd` only emits the directories *under* each search root, so the roots
+    # themselves ($HOME and /etc/nixos) were never selectable — only their
+    # children. Seed them explicitly so e.g. /etc/nixos can be targeted
+    # directly instead of having to dive into a sub directory.
     set target (begin
+        echo /etc/nixos
+        echo "$HOME"
         zoxide query -l 2>/dev/null
         cat $cache
     end | awk '!seen[$0]++' | fzf \

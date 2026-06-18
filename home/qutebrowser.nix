@@ -81,6 +81,8 @@
       chatgpt = "https://chatgpt.com/";
       ch = "https://chatgpt.com";
       gh = "https://github.com";
+      # Niche thing I need to check mods for Civilization 6
+      cv = "https://drive.google.com/drive/folders/1NfvYa8_06N36z_7KUcEUeV_mcolQ604p?usp=sharing";
       st = "https://stoat.chat/app";
     };
   };

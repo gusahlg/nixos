@@ -128,7 +128,10 @@ in
       ${gharialctl} bind "$mod+C"      close
       ${gharialctl} bind "$mod+V"      toggle-float
       ${gharialctl} bind "$mod+R"      spawn ${tofiDrun} --drun-launch=true --font "$FONT" --height 1000 --width 500 --font-size 12
-      ${gharialctl} bind "$mod+D"      spawn ${rio} -e ${nvim} "$HOME/Notes"
+      ${gharialctl} bind "$mod+N"      spawn ${rio} -e ${nvim} "$HOME/Notes"
+      # concord is installed via systemPackages, so it resolves on PATH at
+      # /run/current-system/sw/bin/concord — spawn it by bare name.
+      ${gharialctl} bind "$mod+D"      spawn ${rio} -e concord
 
       # ─── Focus and swap — HJKL is directional (layout-agnostic) ────────
       ${gharialctl} bind "$mod+H"        focus left

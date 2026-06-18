@@ -28,7 +28,9 @@
     ./home/mangohud.nix
     ./home/rio.nix
     ./home/nvim.nix
+    ./home/concord.nix
     ./home/qutebrowser.nix
+    ./home/tofi.nix
     ./home/git.nix
     ./home/mpv.nix
     ./home/htop.nix
