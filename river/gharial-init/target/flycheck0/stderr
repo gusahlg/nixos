@@ -1,0 +1,13 @@
+error: failed to get `gharial-ipc` as a dependency of package `gharial-init-rs v1.0.0 (/etc/nixos/river/gharial-init)`
+
+Caused by:
+  failed to load source for dependency `gharial-ipc`
+
+Caused by:
+  unable to update /etc/nixos/river/gharial-init/@gharial-ipc@
+
+Caused by:
+  failed to read `/etc/nixos/river/gharial-init/@gharial-ipc@/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

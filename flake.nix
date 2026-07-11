@@ -10,14 +10,21 @@
     };
 
     concord.url = "github:chojs23/concord";
+
+    # Keep the window-manager implementation pinned independently from this
+    # system configuration. The lock file records the exact source revision.
+    gharialSrc = {
+      url = "github:gusahlg/gharial/e1e1d143db57a3f3e127725a234e95af1a63e67a";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, concord, ... }:
+  outputs = { self, nixpkgs, home-manager, concord, gharialSrc, ... }:
   {
     nixosConfigurations.sighurt = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
 
-      specialArgs = { inherit concord; };
+      specialArgs = { inherit concord gharialSrc; };
 
       modules = [
         ./hosts/desktop/configuration.nix

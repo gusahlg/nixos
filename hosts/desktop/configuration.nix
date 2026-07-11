@@ -24,35 +24,6 @@ in
 
   nixpkgs.config.allowUnfree = true;
 
-# TEMPORARY SOLUTION
-  nixpkgs.overlays = [
-    (final: prev: {
-      gharial = final.rustPlatform.buildRustPackage rec {
-        pname = "gharial";
-        version = "0.2.1";
-
-        src = final.fetchFromGitHub {
-          owner = "gusahlg";
-          repo = "gharial";
-          rev = "main";
-          hash = "sha256-o5r8nK95FE5lBMLZfqziEE7JGOAO0HQfxFcybMWee9s=";
-        };
-
-        cargoHash = "sha256-Fqhgdqs7xXmd6Bpg7kYLWLiu+Yn4JTbMtJo4iLLFcIs=";
-
-        nativeBuildInputs = [
-          final.pkg-config
-        ];
-
-        buildInputs = [
-          final.wayland
-          final.libxkbcommon
-        ];
-      };
-    })
-  ];
-# TEMPORARY ENDS HERE
-
   networking.hostName = "sighurt";
   networking.networkmanager.enable = true;
   networking.firewall.enable = false;
@@ -104,7 +75,7 @@ in
   services.greetd = {
     enable = true;
     settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --cmd 'river -c /etc/river/init' --remember";
+      command = "${pkgs.tuigreet}/bin/tuigreet --cmd '${pkgs.river}/bin/river -c /etc/river/init' --remember";
       user = "greeter";
     };
   };
@@ -182,7 +153,6 @@ in
       # Cool browser.
       # surf
       claude-code
-      gharial
       heroic
       xwayland
       concord.packages.${pkgs.system}.default

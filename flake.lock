@@ -54,6 +54,23 @@
         "type": "github"
       }
     },
+    "gharialSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781634296,
+        "narHash": "sha256-yIHkT50FrPYf0I9GRmA7qi7OWUIPqVxXmWd5Pdabeeg=",
+        "owner": "gusahlg",
+        "repo": "gharial",
+        "rev": "e1e1d143db57a3f3e127725a234e95af1a63e67a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gusahlg",
+        "repo": "gharial",
+        "rev": "e1e1d143db57a3f3e127725a234e95af1a63e67a",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -110,6 +127,7 @@
     "root": {
       "inputs": {
         "concord": "concord",
+        "gharialSrc": "gharialSrc",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs_2"
       }
