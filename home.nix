@@ -38,6 +38,7 @@
     ./home/tmux.nix
     ./home/tmuxp.nix
     ./home/zoxide.nix
+    ./home/hackatime.nix
   ];
 
   # Global ignore file for `fd`. Keeps the project-picker (and ad-hoc `fd`

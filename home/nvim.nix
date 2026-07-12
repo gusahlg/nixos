@@ -23,6 +23,7 @@
     "nvim/lua/plugins/theme.lua".source = ./nvim/lua/plugins/theme.lua;
     "nvim/lua/plugins/treesitter.lua".source = ./nvim/lua/plugins/treesitter.lua;
     "nvim/lua/plugins/ts-autotag.lua".source = ./nvim/lua/plugins/ts-autotag.lua;
+    "nvim/lua/plugins/wakatime.lua".source = ./nvim/lua/plugins/wakatime.lua;
 
     "nvim/lua/user/toggles.lua".source = ./nvim/lua/user/toggles.lua;
   };
