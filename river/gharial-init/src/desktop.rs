@@ -3,7 +3,7 @@
 use std::env;
 
 use gharial_ipc::config::{Bindings, Config, Layout};
-use gharial_ipc::{chord, ratio, Action, Client, Color, Direction};
+use gharial_ipc::{chord, ratio, Action, Client, Color, Direction, Edge};
 
 const MOD: &str = "Super";
 
@@ -136,6 +136,25 @@ fn build_config(home: &str) -> Config {
             .bind(&format!("{MOD}+Shift+{key}"), Action::MoveToTag(tag));
     }
 
+    // Outputs (screens): every screen is its own view into the tags.
+    // Super+Period/Comma cycle which screen is focused — new windows,
+    // tag commands, and keyboard input follow. The pointer stays where
+    // it is; Shift variants move the focused window between screens.
+    bindings = bindings
+        .bind(
+            chord!("Super+Period"),
+            Action::focus_output(Direction::Next),
+        )
+        .bind(chord!("Super+Comma"), Action::focus_output(Direction::Prev))
+        .bind(
+            chord!("Super+Shift+Period"),
+            Action::send_to_output(Direction::Next),
+        )
+        .bind(
+            chord!("Super+Shift+Comma"),
+            Action::send_to_output(Direction::Prev),
+        );
+
     let screenshot = r#"mkdir -p "$HOME/Pictures/Screenshots" && grim -g "$(slurp)" - | tee "$HOME/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png" | wl-copy"#;
     let hall_of_fame = r#"mkdir -p "$HOME/Pictures/hall-of-fame" && grim -g "$(slurp)" - | tee "$HOME/Pictures/hall-of-fame/$(date +%Y-%m-%d_%H-%M-%S).png" | wl-copy"#;
     if command_available("grim") && command_available("slurp") {
@@ -163,6 +182,7 @@ fn build_config(home: &str) -> Config {
         .bind_in_mode("tile_ratio", chord!("Escape"), Action::ExitMode);
 
     Config::new()
+        .warp_pointer_on_output_focus(false)
         .layout(
             Layout::new()
                 .gaps(0)
@@ -173,8 +193,15 @@ fn build_config(home: &str) -> Config {
                 .border_color_focused(Color::hex(0xC8324BFF))
                 .border_color_unfocused(Color::hex(0x00C896FF)),
         )
+        // Pointer edge links between the two screens (DP-2 and
+        // HDMI-A-1). Both edge pairs are linked: the pair that matches
+        // the adjacent boundary stays dormant (the pointer crosses
+        // naturally there), the outer pair wraps the pointer around.
+        // `gharialctl output list` shows live names and links.
+        .link_outputs("DP-2", Edge::Left, "HDMI-A-1", Edge::Right)
+        .link_outputs("DP-2", Edge::Right, "HDMI-A-1", Edge::Left)
         .bindings(bindings)
-        .spawn(["waybar"])
+        .spawn(["meander-bar"])
         .spawn(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
         .spawn([
             "wl-paste", "--type", "image", "--watch", "cliphist", "store",

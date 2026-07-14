@@ -2,7 +2,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "gharial";
-  version = "0.2.2";
+  version = "0.3.0";
   inherit src;
 
   cargoLock.lockFile = "${src}/Cargo.lock";

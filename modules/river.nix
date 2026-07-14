@@ -1,5 +1,5 @@
 # /etc/nixos/modules/river.nix
-{ pkgs, lib, gharialSrc, ... }:
+{ pkgs, lib, gharialSrc, meanderSrc, ... }:
 
 let
   font = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
@@ -14,13 +14,26 @@ let
   record = import ../scripts/record.nix { inherit pkgs; };
   recordStop = import ../scripts/record-stop.nix { inherit pkgs; };
 
-  gharial = pkgs.callPackage ../packages/gharial.nix {
+  # Keep the system rebuildable before the corresponding Gharial commit is
+  # published. Once gharialSrc contains this feature, drop this patch layer.
+  gharialPatchedSrc = pkgs.applyPatches {
+    name = "gharial-source-with-output-focus-warp";
     src = gharialSrc;
+    patches = [ ../patches/gharial-output-focus-warp.patch ];
+  };
+
+  gharial = pkgs.callPackage ../packages/gharial.nix {
+    src = gharialPatchedSrc;
   };
 
   gharialInit = pkgs.callPackage ../packages/gharial-init.nix {
-    gharialIpcSrc = "${gharialSrc}/crates/gharial-ipc";
+    gharialIpcSrc = "${gharialPatchedSrc}/crates/gharial-ipc";
     src = ../river/gharial-init;
+  };
+
+  meanderBar = pkgs.callPackage ../packages/meander-bar.nix {
+    inherit font meanderSrc;
+    src = ../river/meander-bar;
   };
 
   riverInit = pkgs.writeShellApplication {
@@ -41,7 +54,7 @@ in
     pkgs.thunar
     pkgs.neovim
     pkgs.tofi
-    pkgs.waybar
+    meanderBar
     pkgs.wl-clipboard
     pkgs.cliphist
     pkgs.swaybg

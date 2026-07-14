@@ -1,0 +1,13 @@
+error: failed to get `meander` as a dependency of package `meander-bar v1.0.0 (/etc/nixos/river/meander-bar)`
+
+Caused by:
+  failed to load source for dependency `meander`
+
+Caused by:
+  unable to update /etc/nixos/river/meander-bar/MEANDER_ROOT_PLACEHOLDER/crates/meander
+
+Caused by:
+  failed to read `/etc/nixos/river/meander-bar/MEANDER_ROOT_PLACEHOLDER/crates/meander/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

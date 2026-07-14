@@ -1,0 +1,367 @@
+diff --git a/crates/gharial-ipc/src/action.rs b/crates/gharial-ipc/src/action.rs
+index d89fb42..a26757c 100644
+--- a/crates/gharial-ipc/src/action.rs
++++ b/crates/gharial-ipc/src/action.rs
+@@ -6,6 +6,7 @@
+
+ use crate::edge::{EdgeRef, OutputTarget};
+ use crate::keysyms::{parse_keysym, parse_modifier};
++use crate::value::BoolValue;
+
+ #[derive(Clone, Debug)]
+ pub enum Action {
+@@ -62,6 +63,9 @@ pub enum Action {
+     /// Move the focused window to another output. The window adopts
+     /// the target output's currently visible tags.
+     SendToOutput(OutputTarget),
++    /// Enable, disable, or toggle automatic pointer warping when the
++    /// focused output changes through an `output focus` action.
++    SetOutputFocusWarp(BoolValue),
+     /// Link two output edges so the pointer warps through them when it
+     /// hits either side. Links are bidirectional.
+     LinkOutputs {
+@@ -327,6 +331,9 @@ impl Action {
+             Self::SendToOutput(target) => {
+                 vec!["output".into(), "send".into(), target.to_token()]
+             }
++            Self::SetOutputFocusWarp(value) => {
++                vec!["output".into(), "focus-warp".into(), value.as_str().into()]
++            }
+             Self::LinkOutputs { a, b } => {
+                 vec!["output".into(), "link".into(), a.to_token(), b.to_token()]
+             }
+@@ -392,6 +399,12 @@ impl Action {
+         Self::SendToOutput(OutputTarget::Named(name.into()))
+     }
+
++    /// Configure whether `output focus` warps the pointer to the newly
++    /// focused output. This does not affect explicitly linked edges.
++    pub fn set_output_focus_warp(value: BoolValue) -> Self {
++        Self::SetOutputFocusWarp(value)
++    }
++
+     /// Link two output edges so the pointer warps through them (both
+     /// directions).
+     pub fn link_outputs(
+@@ -486,7 +499,7 @@ fn format_delta_i32(delta: i32) -> String {
+ fn parse_output_action(tokens: &[&str]) -> Result<Action, String> {
+     let (&sub, rest) = tokens
+         .split_first()
+-        .ok_or("output: expected focus|send|link|unlink")?;
++        .ok_or("output: expected focus|send|focus-warp|link|unlink")?;
+     match sub {
+         "focus" => {
+             let target = rest
+@@ -502,6 +515,13 @@ fn parse_output_action(tokens: &[&str]) -> Result<Action, String> {
+                 .ok_or("output send: expected next|prev|left|right|up|down|NAME")?;
+             Ok(Action::SendToOutput(OutputTarget::parse(target)))
+         }
++        "focus-warp" => {
++            let value = rest
++                .first()
++                .copied()
++                .ok_or("output focus-warp: expected on|off|toggle")?;
++            BoolValue::parse(value).map(Action::SetOutputFocusWarp)
++        }
+         "link" => match rest {
+             [a, b] => Ok(Action::LinkOutputs {
+                 a: EdgeRef::parse(a)?,
+@@ -968,6 +988,28 @@ mod tests {
+         assert!(Action::parse(&["output", "frobnicate", "1"]).is_err());
+     }
+
++    #[test]
++    fn parse_action_output_focus_warp() {
++        assert!(matches!(
++            Action::parse(&["output", "focus-warp", "on"]).unwrap(),
++            Action::SetOutputFocusWarp(BoolValue::On)
++        ));
++        assert!(matches!(
++            Action::parse(&["output", "focus-warp", "off"]).unwrap(),
++            Action::SetOutputFocusWarp(BoolValue::Off)
++        ));
++        assert!(matches!(
++            Action::parse(&["output", "focus-warp", "toggle"]).unwrap(),
++            Action::SetOutputFocusWarp(BoolValue::Toggle)
++        ));
++
++        let missing = Action::parse(&["output", "focus-warp"]).unwrap_err();
++        assert!(missing.contains("on|off|toggle"));
++        let invalid = Action::parse(&["output", "focus-warp", "maybe"]).unwrap_err();
++        assert!(invalid.contains("maybe"));
++        assert!(invalid.contains("on|off|toggle"));
++    }
++
+     #[test]
+     fn parse_action_output_link_and_unlink() {
+         use crate::edge::Edge;
+@@ -998,6 +1040,9 @@ mod tests {
+             Action::focus_output_named("DP-2"),
+             Action::send_to_output(Direction::Prev),
+             Action::send_to_output_named("2"),
++            Action::set_output_focus_warp(BoolValue::On),
++            Action::set_output_focus_warp(BoolValue::Off),
++            Action::set_output_focus_warp(BoolValue::Toggle),
+             Action::link_outputs("DP-1", Edge::Right, "DP-2", Edge::Left),
+             Action::unlink_output("DP-1", Edge::Right),
+         ];
+diff --git a/crates/gharial-ipc/src/client.rs b/crates/gharial-ipc/src/client.rs
+index ca50aaf..d6f89cb 100644
+--- a/crates/gharial-ipc/src/client.rs
++++ b/crates/gharial-ipc/src/client.rs
+@@ -287,6 +287,12 @@ impl Client {
+         self.execute(Action::send_to_output_named(name))
+     }
+
++    /// Configure whether `output focus` warps the pointer to the newly
++    /// focused output. Explicit output edge links are unaffected.
++    pub fn set_output_focus_warp(&self, value: impl Into<BoolValue>) -> Result<()> {
++        self.execute(Action::set_output_focus_warp(value.into()))
++    }
++
+     /// Link two output edges so the pointer warps through them.
+     pub fn link_outputs(
+         &self,
+diff --git a/crates/gharial-ipc/src/config.rs b/crates/gharial-ipc/src/config.rs
+index a33aa5e..1d4625e 100644
+--- a/crates/gharial-ipc/src/config.rs
++++ b/crates/gharial-ipc/src/config.rs
+@@ -313,8 +313,9 @@ impl Bindings {
+
+ // ── Top-level config ─────────────────────────────────────────────────
+
+-/// A whole config: layout/border parameters, bindings, and autostart
+-/// programs, applied in that order by [`Config::apply`].
++/// A whole config: layout/border parameters, output behaviour and edge
++/// links, bindings, and autostart programs, applied in that order by
++/// [`Config::apply`].
+ ///
+ /// This is sugar over applying a [`Layout`] and [`Bindings`] yourself —
+ /// use it when you want one `apply` call for the entire session.
+@@ -322,6 +323,7 @@ impl Bindings {
+ pub struct Config {
+     layout: Layout,
+     bindings: Bindings,
++    output_focus_warp: Option<bool>,
+     links: Vec<Action>,
+     autostart: Vec<Vec<String>>,
+ }
+@@ -344,6 +346,14 @@ impl Config {
+         self
+     }
+
++    /// Configure whether `output focus` warps the pointer to the newly
++    /// focused output. The daemon defaults to enabled when this setting
++    /// is omitted. Explicit output edge links are unaffected.
++    pub fn warp_pointer_on_output_focus(mut self, enabled: bool) -> Self {
++        self.output_focus_warp = Some(enabled);
++        self
++    }
++
+     /// Link two output edges so the pointer warps through them (both
+     /// directions). Outputs are referred to by connector name (`DP-1`)
+     /// or 1-based advertisement index (`"1"`, `"2"`, …).
+@@ -370,11 +380,14 @@ impl Config {
+         self
+     }
+
+-    /// Apply the layout, then the output edge links, then the bindings,
+-    /// then fire the autostart programs — stopping at the first daemon
+-    /// error.
++    /// Apply the layout, output-focus warp setting, output edge links,
++    /// and bindings in that order, then fire the autostart programs —
++    /// stopping at the first daemon error.
+     pub fn apply(&self, client: &Client) -> crate::Result<()> {
+         self.layout.apply(client)?;
++        if let Some(enabled) = self.output_focus_warp {
++            client.set_output_focus_warp(enabled)?;
++        }
+         for link in &self.links {
+             client.execute(link.clone())?;
+         }
+@@ -496,6 +509,24 @@ mod tests {
+         assert_eq!(spec, BindingSpec::parse_const(c).unwrap());
+     }
+
++    #[test]
++    fn output_focus_warp_builder_is_optional_and_last_value_wins() {
++        assert_eq!(Config::new().output_focus_warp, None);
++        assert_eq!(
++            Config::new()
++                .warp_pointer_on_output_focus(false)
++                .output_focus_warp,
++            Some(false)
++        );
++        assert_eq!(
++            Config::new()
++                .warp_pointer_on_output_focus(false)
++                .warp_pointer_on_output_focus(true)
++                .output_focus_warp,
++            Some(true)
++        );
++    }
++
+     #[test]
+     fn layout_builder_queues_actions_in_order() {
+         let layout = Layout::new()
+diff --git a/crates/gharial-ipc/src/value.rs b/crates/gharial-ipc/src/value.rs
+index 5fca68d..9acd1e1 100644
+--- a/crates/gharial-ipc/src/value.rs
++++ b/crates/gharial-ipc/src/value.rs
+@@ -14,6 +14,16 @@ pub enum BoolValue {
+ }
+
+ impl BoolValue {
++    /// Parse the canonical boolean tokens accepted by action grammars.
++    pub fn parse(s: &str) -> Result<Self, String> {
++        match s {
++            "on" => Ok(Self::On),
++            "off" => Ok(Self::Off),
++            "toggle" => Ok(Self::Toggle),
++            other => Err(format!("invalid boolean: {other} (expected on|off|toggle)")),
++        }
++    }
++
+     /// Token form accepted by the daemon's grammar.
+     pub fn as_str(self) -> &'static str {
+         match self {
+@@ -63,4 +73,20 @@ mod tests {
+             assert_eq!(format!("{b}"), b.as_str());
+         }
+     }
++
++    #[test]
++    fn parse_accepts_exactly_the_canonical_tokens() {
++        assert_eq!(BoolValue::parse("on"), Ok(BoolValue::On));
++        assert_eq!(BoolValue::parse("off"), Ok(BoolValue::Off));
++        assert_eq!(BoolValue::parse("toggle"), Ok(BoolValue::Toggle));
++
++        for invalid in ["", "true", "false", "yes", "no", "maybe"] {
++            let error = BoolValue::parse(invalid).unwrap_err();
++            assert!(
++                error.contains(invalid),
++                "{error:?} should mention {invalid:?}"
++            );
++            assert!(error.contains("on|off|toggle"));
++        }
++    }
+ }
+diff --git a/crates/gharial/src/wm/actions/mod.rs b/crates/gharial/src/wm/actions/mod.rs
+index c3cc15e..67453d4 100644
+--- a/crates/gharial/src/wm/actions/mod.rs
++++ b/crates/gharial/src/wm/actions/mod.rs
+@@ -12,7 +12,7 @@
+ //! | `focus`    | `FocusDirection`, internal `set_focus`/`ensure_*`  |
+ //! | `window`   | `Close`, `ToggleFloat`, `SwapDirection`            |
+ //! | `tag`      | `FocusTag` / `ToggleTag` / `MoveToTag` / window-tag |
+-//! | `output`   | `FocusOutput` / `SendToOutput` / edge links         |
++//! | `output`   | output focus/send, focus-warp policy, edge links    |
+ //! | `mode`     | `EnterMode` / `ExitMode` / `Bind` / `Unbind`       |
+ //! | `layout`   | `Layout { key, args }`                             |
+ //! | `spawn`    | `Spawn { cmd, args }`                              |
+@@ -57,6 +57,7 @@ pub fn execute(action: Action, world: &mut World) {
+         Action::ToggleWindowTag(n) => tag::toggle_window_tag(world, n),
+         Action::FocusOutput(target) => output::focus_output(world, &target),
+         Action::SendToOutput(target) => output::send_to_output(world, &target),
++        Action::SetOutputFocusWarp(value) => output::set_output_focus_warp(world, value),
+         Action::LinkOutputs { a, b } => output::link_outputs(world, a, b),
+         Action::UnlinkOutput(at) => output::unlink_output(world, &at),
+     }
+diff --git a/crates/gharial/src/wm/actions/output.rs b/crates/gharial/src/wm/actions/output.rs
+index 439dc9a..345561d 100644
+--- a/crates/gharial/src/wm/actions/output.rs
++++ b/crates/gharial/src/wm/actions/output.rs
+@@ -2,9 +2,9 @@
+ //! focused window to another output, and manage pointer edge links.
+ //!
+ //! The focused output is where new windows appear, where tag commands
+-//! apply, and where keyboard focus is restored. Switching it also warps
+-//! the pointer to that screen (unless it is already there) so pointer
+-//! and keyboard never end up on different screens.
++//! apply, and where keyboard focus is restored. By default switching it
++//! also warps the pointer to that screen (unless it is already there);
++//! configuration can leave the pointer in place instead.
+
+ use wayland_client::backend::ObjectId;
+ use wayland_client::Proxy;
+@@ -12,6 +12,7 @@ use wayland_client::Proxy;
+ use crate::action::Direction;
+ use crate::edge::{EdgeRef, OutputTarget};
+ use crate::layout::Rect;
++use crate::value::BoolValue;
+
+ use super::super::spatial::pick_neighbor;
+ use super::super::world::World;
+@@ -61,7 +62,9 @@ pub(in crate::wm) fn focus_output(world: &mut World, target: &OutputTarget) {
+         Some(id) => set_focus(world, &seat_id, &id),
+         None => clear_focus(world, &seat_id),
+     }
+-    warp_pointer_to_output(world, &output_id);
++    if world.warp_pointer_on_output_focus {
++        warp_pointer_to_output(world, &output_id);
++    }
+ }
+
+ pub(in crate::wm) fn send_to_output(world: &mut World, target: &OutputTarget) {
+@@ -102,6 +105,22 @@ pub(in crate::wm) fn unlink_output(world: &mut World, at: &EdgeRef) {
+     world.links.unlink(at);
+ }
+
++/// Configure whether explicit output-focus actions move the pointer to
++/// the newly focused output. Edge-link warps remain independently
++/// controlled by the configured links.
++pub(in crate::wm) fn set_output_focus_warp(world: &mut World, value: BoolValue) {
++    world.warp_pointer_on_output_focus =
++        resolve_output_focus_warp(world.warp_pointer_on_output_focus, value);
++}
++
++fn resolve_output_focus_warp(current: bool, value: BoolValue) -> bool {
++    match value {
++        BoolValue::On => true,
++        BoolValue::Off => false,
++        BoolValue::Toggle => !current,
++    }
++}
++
+ /// Warp the pointer to the centre of `output_id` unless it is already
+ /// on that output. Requires seat v3; called from inside a manage
+ /// sequence (pointer_warp is manage-restricted).
+@@ -134,3 +153,16 @@ fn warp_pointer_to_output(world: &mut World, output_id: &ObjectId) {
+     seat.proxy.pointer_warp(center.0, center.1);
+     seat.last_pointer = Some(center);
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn output_focus_warp_setting_handles_on_off_and_toggle() {
++        assert!(resolve_output_focus_warp(false, BoolValue::On));
++        assert!(!resolve_output_focus_warp(true, BoolValue::Off));
++        assert!(resolve_output_focus_warp(false, BoolValue::Toggle));
++        assert!(!resolve_output_focus_warp(true, BoolValue::Toggle));
++    }
++}
+diff --git a/crates/gharial/src/wm/world.rs b/crates/gharial/src/wm/world.rs
+index 5bf3562..8248374 100644
+--- a/crates/gharial/src/wm/world.rs
++++ b/crates/gharial/src/wm/world.rs
+@@ -37,6 +37,9 @@ pub struct World {
+     pub seats: Seats,
+     pub bindings: Bindings,
+     pub modes: Modes,
++    /// Whether an explicit `output focus` action moves the pointer to
++    /// the newly focused output. Pointer edge links are independent.
++    pub warp_pointer_on_output_focus: bool,
+     /// Pointer edge links between outputs (the "portal" config).
+     pub links: EdgeLinks,
+     /// `wl_output` globals the registry has advertised, keyed by global
+@@ -69,6 +72,7 @@ impl World {
+             seats: Seats::default(),
+             bindings: Bindings::default(),
+             modes: Modes::default(),
++            warp_pointer_on_output_focus: true,
+             links: EdgeLinks::default(),
+             wl_output_globals: HashMap::new(),
+             target_cache: TargetCache::default(),

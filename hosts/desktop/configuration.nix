@@ -177,13 +177,13 @@ in
       clang
       ninja
       river
-      waybar
       wl-clipboard
       grim
       slurp
       tofi
       bemenu
       chezmoi
+      wlr-randr
       rio
       fish
       tmux

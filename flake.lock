@@ -57,17 +57,17 @@
     "gharialSrc": {
       "flake": false,
       "locked": {
-        "lastModified": 1781634296,
-        "narHash": "sha256-yIHkT50FrPYf0I9GRmA7qi7OWUIPqVxXmWd5Pdabeeg=",
+        "lastModified": 1783941984,
+        "narHash": "sha256-uDR8TnOml3tUa16gjtZ9Qty8aIoR698W2phDNhVN0gw=",
         "owner": "gusahlg",
         "repo": "gharial",
-        "rev": "e1e1d143db57a3f3e127725a234e95af1a63e67a",
+        "rev": "73df3a0c30449c9816fbe5df1520da147ab46243",
         "type": "github"
       },
       "original": {
         "owner": "gusahlg",
         "repo": "gharial",
-        "rev": "e1e1d143db57a3f3e127725a234e95af1a63e67a",
+        "rev": "73df3a0c30449c9816fbe5df1520da147ab46243",
         "type": "github"
       }
     },
@@ -89,6 +89,23 @@
         "owner": "nix-community",
         "ref": "release-26.05",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "meanderSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779816674,
+        "narHash": "sha256-qLwH97o6U8vEj2HXlbPX0jV1uZVXpIFtRvrGj8r3mZ4=",
+        "owner": "gusahlg",
+        "repo": "meander",
+        "rev": "459767a84641002f1be81ede102e6782efa71f48",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gusahlg",
+        "repo": "meander",
+        "rev": "459767a84641002f1be81ede102e6782efa71f48",
         "type": "github"
       }
     },
@@ -129,6 +146,7 @@
         "concord": "concord",
         "gharialSrc": "gharialSrc",
         "home-manager": "home-manager",
+        "meanderSrc": "meanderSrc",
         "nixpkgs": "nixpkgs_2"
       }
     },
