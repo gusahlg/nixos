@@ -22,6 +22,35 @@
     "$HOME/.local/bin"
   ];
 
+  services.kanshi = {
+    enable = true;
+    systemdTarget = "river-session.target";
+
+    settings = [
+      {
+        profile = {
+          name = "desktop";
+          outputs = [
+            {
+              criteria = "HDMI-A-1";
+              status = "enable";
+              mode = "1920x1080@60Hz";
+              position = "0,0";
+            }
+            {
+              criteria = "DP-2";
+              status = "enable";
+              mode = "3440x1440@120Hz";
+              position = "1920,0";
+            }
+          ];
+        };
+      }
+    ];
+  };
+
+  systemd.user.targets.river-session.Unit.Description = "River compositor session";
+
   imports = [
     ./home/fish.nix
     ./home/fastfetch.nix

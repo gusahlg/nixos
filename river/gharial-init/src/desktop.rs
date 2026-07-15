@@ -198,7 +198,6 @@ fn build_config(home: &str) -> Config {
         // the adjacent boundary stays dormant (the pointer crosses
         // naturally there), the outer pair wraps the pointer around.
         // `gharialctl output list` shows live names and links.
-        .link_outputs("DP-2", Edge::Left, "HDMI-A-1", Edge::Right)
         .link_outputs("DP-2", Edge::Right, "HDMI-A-1", Edge::Left)
         .bindings(bindings)
         .spawn(["meander-bar"])

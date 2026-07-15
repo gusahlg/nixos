@@ -18,6 +18,7 @@ fn main() {
 fn run() -> Result<(), String> {
     set_session_environment();
     propagate_environment();
+    let _river_session = RiverSession::start();
 
     let client = Client::new();
     let mut daemon = Daemon::spawn()?;
@@ -53,6 +54,28 @@ fn propagate_environment() {
         .args(["--user", "import-environment"])
         .args(vars)
         .status();
+}
+
+struct RiverSession;
+
+impl RiverSession {
+    fn start() -> Self {
+        let _ = Command::new("systemctl")
+            .args(["--user", "stop", "river-session.target"])
+            .status();
+        let _ = Command::new("systemctl")
+            .args(["--user", "start", "river-session.target"])
+            .status();
+        Self
+    }
+}
+
+impl Drop for RiverSession {
+    fn drop(&mut self) {
+        let _ = Command::new("systemctl")
+            .args(["--user", "stop", "river-session.target"])
+            .status();
+    }
 }
 
 struct Daemon(Option<Child>);
