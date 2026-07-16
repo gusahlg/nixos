@@ -220,7 +220,7 @@ fn fetch_output_tags(gharial: &Gharial) -> Result<OutputTags, String> {
 fn parse_output_list(body: &str) -> OutputTags {
     let mut result = OutputTags::default();
     for entry in body.split(';').map(str::trim) {
-        if entry.is_empty() || entry == "no outputs" || entry.starts_with("link ") {
+        if entry.is_empty() || entry == "no outputs" {
             continue;
         }
         let mut fields = entry.split_whitespace();
@@ -307,9 +307,8 @@ mod tests {
     #[test]
     fn parses_each_outputs_tag_mask_and_focus() {
         let parsed = parse_output_list(
-            "DP-2 2560x1440+0+0 tags=0x00000005 focused; \
-             HDMI-A-1 1920x1080+-1920+0 tags=0x00000002; \
-             link DP-2:left<->HDMI-A-1:right",
+            "DP-2 3440x1440+0+0 tags=0x00000005 focused; \
+             HDMI-A-1 1920x1080+3440+0 tags=0x00000002",
         );
         assert_eq!(parsed.by_name.get("DP-2"), Some(&0x5));
         assert_eq!(parsed.by_name.get("HDMI-A-1"), Some(&0x2));
@@ -319,7 +318,7 @@ mod tests {
     #[test]
     fn ignores_empty_and_malformed_entries() {
         assert_eq!(parse_output_list("no outputs"), OutputTags::default());
-        let parsed = parse_output_list("DP-1 missing-tags; ; link A:left<->B:right");
+        let parsed = parse_output_list("DP-1 missing-tags; ; malformed");
         assert_eq!(parsed, OutputTags::default());
     }
 

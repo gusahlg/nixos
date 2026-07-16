@@ -14,20 +14,12 @@ let
   record = import ../scripts/record.nix { inherit pkgs; };
   recordStop = import ../scripts/record-stop.nix { inherit pkgs; };
 
-  # Keep the system rebuildable before the corresponding Gharial commit is
-  # published. Once gharialSrc contains this feature, drop this patch layer.
-  gharialPatchedSrc = pkgs.applyPatches {
-    name = "gharial-source-with-output-focus-warp";
-    src = gharialSrc;
-    patches = [ ../patches/gharial-output-focus-warp.patch ];
-  };
-
   gharial = pkgs.callPackage ../packages/gharial.nix {
-    src = gharialPatchedSrc;
+    src = gharialSrc;
   };
 
   gharialInit = pkgs.callPackage ../packages/gharial-init.nix {
-    gharialIpcSrc = "${gharialPatchedSrc}/crates/gharial-ipc";
+    gharialIpcSrc = "${gharialSrc}/crates/gharial-ipc";
     src = ../river/gharial-init;
   };
 

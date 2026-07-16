@@ -3,7 +3,7 @@
 use std::env;
 
 use gharial_ipc::config::{Bindings, Config, Layout};
-use gharial_ipc::{chord, ratio, Action, Client, Color, Direction, Edge};
+use gharial_ipc::{chord, ratio, Action, Client, Color, Direction};
 
 const MOD: &str = "Super";
 
@@ -193,12 +193,8 @@ fn build_config(home: &str) -> Config {
                 .border_color_focused(Color::hex(0xC8324BFF))
                 .border_color_unfocused(Color::hex(0x00C896FF)),
         )
-        // Pointer edge links between the two screens (DP-2 and
-        // HDMI-A-1). Both edge pairs are linked: the pair that matches
-        // the adjacent boundary stays dormant (the pointer crosses
-        // naturally there), the outer pair wraps the pointer around.
-        // `gharialctl output list` shows live names and links.
-        .link_outputs("DP-2", Edge::Right, "HDMI-A-1", Edge::Left)
+        // kanshi owns output modes, positions, and pointer adjacency.
+        // Gharial only switches focus and sends windows between outputs.
         .bindings(bindings)
         .spawn(["meander-bar"])
         .spawn(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])

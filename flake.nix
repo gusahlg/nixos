@@ -14,7 +14,7 @@
     # Keep the window-manager implementation pinned independently from this
     # system configuration. The lock file records the exact source revision.
     gharialSrc = {
-      url = "github:gusahlg/gharial/73df3a0c30449c9816fbe5df1520da147ab46243";
+      url = "github:gusahlg/gharial/a6c6f14fcc2c3cdcc64fe7e13b458331b8502c2a";
       flake = false;
     };
 

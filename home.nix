@@ -1,5 +1,10 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
+let
+  # Set this to false to disable HDMI-A-1 entirely. With it disabled,
+  # there is no second output or cursor boundary to cross.
+  enableHdmiOutput = true;
+in
 {
   home.username = "gusahlg";
   home.homeDirectory = "/home/gusahlg";
@@ -32,17 +37,18 @@
           name = "desktop";
           outputs = [
             {
-              criteria = "HDMI-A-1";
-              status = "enable";
-              mode = "1920x1080@60Hz";
-              position = "0,0";
-            }
-            {
               criteria = "DP-2";
               status = "enable";
               mode = "3440x1440@120Hz";
-              position = "1920,0";
+              position = "0,0";
             }
+            ({
+              criteria = "HDMI-A-1";
+              status = if enableHdmiOutput then "enable" else "disable";
+            } // lib.optionalAttrs enableHdmiOutput {
+              mode = "1920x1080@60Hz";
+              position = "3440,0";
+            })
           ];
         };
       }

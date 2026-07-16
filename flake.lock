@@ -57,17 +57,17 @@
     "gharialSrc": {
       "flake": false,
       "locked": {
-        "lastModified": 1783941984,
-        "narHash": "sha256-uDR8TnOml3tUa16gjtZ9Qty8aIoR698W2phDNhVN0gw=",
+        "lastModified": 1784198095,
+        "narHash": "sha256-pSWFlpqsFFRwiIpQl0/fR2E+5xVTswADMafcNQlNvJI=",
         "owner": "gusahlg",
         "repo": "gharial",
-        "rev": "73df3a0c30449c9816fbe5df1520da147ab46243",
+        "rev": "a6c6f14fcc2c3cdcc64fe7e13b458331b8502c2a",
         "type": "github"
       },
       "original": {
         "owner": "gusahlg",
         "repo": "gharial",
-        "rev": "73df3a0c30449c9816fbe5df1520da147ab46243",
+        "rev": "a6c6f14fcc2c3cdcc64fe7e13b458331b8502c2a",
         "type": "github"
       }
     },
