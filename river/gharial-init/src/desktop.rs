@@ -16,7 +16,7 @@ pub fn configure(client: &Client) -> Result<(), String> {
 
 fn build_config(home: &str) -> Config {
     let notes = format!("{home}/Notes");
-    let wallpaper = format!("{home}/Pictures/doctor_nath.png");
+    let wallpaper = format!("/etc/nixos/assets/topographic-sunset-wallpaper.png");
 
     let mut tofi_args = vec![
         "--drun-launch=true".to_string(),
