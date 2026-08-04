@@ -52,5 +52,10 @@
         ./hosts/server/configuration.nix
       ];
     };
+    nixosConfigurations.louise = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit concord home-manager; };
+      modules = [ ./hosts/louise/configuration.nix ];
+    };
   };
 }
