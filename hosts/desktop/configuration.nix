@@ -10,6 +10,7 @@ in
 {  
   imports = [
     ./hardware-configuration.nix
+    ./impermanence.nix
     ../../modules/river.nix
     ../../modules/roblox.nix
     # Since I have VIA on my keyboard this is not needed
@@ -160,6 +161,7 @@ in
       rustfmt
       clippy
       mpv
+      python3Packages.pip
       zathura
       fzf
       swaybg

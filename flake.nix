@@ -9,6 +9,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "";
+      inputs.home-manager.follows = "";
+    };
+
     concord.url = "github:chojs23/concord";
 
     # Keep the window-manager implementation pinned independently from this
@@ -25,7 +31,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, concord, gharialSrc, meanderSrc, ... }:
+  outputs = { self, nixpkgs, home-manager, impermanence, concord, gharialSrc, meanderSrc, ... }:
   {
     nixosConfigurations.sighurt = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -33,6 +39,7 @@
       specialArgs = { inherit concord gharialSrc meanderSrc; };
 
       modules = [
+        impermanence.nixosModules.impermanence
         ./hosts/desktop/configuration.nix
 
         home-manager.nixosModules.home-manager
