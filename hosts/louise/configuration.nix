@@ -7,7 +7,10 @@ in
   # Generate this file on Louise's computer with `nixos-generate-config`.
   # Keeping it separate prevents this host from inheriting sighurt's disks,
   # NVIDIA settings, or monitor assumptions.
-  imports = [ home-manager.nixosModules.home-manager ]
+  imports = [
+    home-manager.nixosModules.home-manager
+    ../../modules/roblox.nix
+  ]
     ++ lib.optional (builtins.pathExists hardwareConfig) hardwareConfig;
 
   warnings = lib.optional (!(builtins.pathExists hardwareConfig)) ''

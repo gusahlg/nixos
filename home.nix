@@ -74,6 +74,7 @@ in
     ./home/tmuxp.nix
     ./home/zoxide.nix
     ./home/hackatime.nix
+    ./home/roblox.nix
   ];
 
   # Global ignore file for `fd`. Keeps the project-picker (and ad-hoc `fd`

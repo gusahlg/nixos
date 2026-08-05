@@ -10,10 +10,8 @@
   # Keep the development stack on the maintenance account rather than
   # exposing development applications in Louise's profile.
   home.packages = with pkgs; [
-    blas
     cargo
     chezmoi
-    clang
     claude-code
     clippy
     cmake
@@ -26,7 +24,6 @@
     htop
     hyperfine
     libxkbcommon
-    lapack
     ninja
     nnn
     nodejs
