@@ -131,9 +131,9 @@ in
     ];
 
     files = [
-      # Stable host identity and the existing imperative user password.
+      # Stable host identity. User passwords are declared from files under
+      # /persist/secrets, so /etc/shadow must be rebuilt rather than persisted.
       "/etc/machine-id"
-      "/etc/shadow"
       "/etc/adjtime"
 
       # Keep the SSH host identity stable across reboots.

@@ -1,13 +1,21 @@
-{ config, lib, pkgs, concord, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  concord,
+  ...
+}:
 
 let
-  pkgsFixed = pkgs.extend (final: prev: {
-    openldap = prev.openldap.overrideAttrs (old: {
-      doCheck = false;
-    });
-  });
+  pkgsFixed = pkgs.extend (
+    final: prev: {
+      openldap = prev.openldap.overrideAttrs (old: {
+        doCheck = false;
+      });
+    }
+  );
 in
-{  
+{
   imports = [
     ./hardware-configuration.nix
     ./impermanence.nix
@@ -114,12 +122,17 @@ in
     };
   };
 
+  users.mutableUsers = false;
+
   users.users.gusahlg = {
     isNormalUser = true;
+
     extraGroups = [
       "wheel"
       "networkmanager"
     ];
+
+    hashedPasswordFile = "/persist/secrets/gusahlg-password";
   };
 
   fonts.packages = with pkgs; [
@@ -148,8 +161,7 @@ in
       wineWow64Packages.staging
       winetricks
     ])
-    ++
-    (with pkgs; [
+    ++ (with pkgs; [
       equibop
 
       # Cool browser.
@@ -223,12 +235,14 @@ in
       lapack
 
       # Python + scientific/ML stack
-      (python3.withPackages (ps: with ps; [
-        numpy
-        scipy
-        torch
-        onnxruntime
-      ]))
+      (python3.withPackages (
+        ps: with ps; [
+          numpy
+          scipy
+          torch
+          onnxruntime
+        ]
+      ))
 
       # Profiling / monitoring
       nvtopPackages.full

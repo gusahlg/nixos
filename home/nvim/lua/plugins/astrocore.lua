@@ -26,7 +26,7 @@ return {
 			cmp = true,
 			diagnostics = {
 				virtual_text = true,
-				virtual_lines = true,
+				virtual_lines = false,
 			},
 			highlighturl = true,
 			notifications = true,
@@ -44,9 +44,6 @@ return {
 					}
 					return icons[diagnostic.severity] or ">"
 				end,
-			},
-			virtual_lines = {
-				current_line = true,
 			},
 			float = {
 				border = "rounded",
@@ -105,6 +102,7 @@ return {
 				["<leader>uc"] = { toggles.toggle_buffer_completion, desc = "Toggle code suggestions (buffer)" },
 				["<leader>uC"] = { toggles.toggle_global_completion, desc = "Toggle code suggestions (global)" },
 				["<leader>ud"] = { toggles.toggle_diagnostics, desc = "Toggle error detection" },
+				["<leader>ua"] = { toggles.toggle_language_analyzers, desc = "Toggle language analyzers" },
 				["<C-d>"] = { "<C-d>zz", desc = "Half page down" },
 				["<C-u>"] = { "<C-u>zz", desc = "Half page up" },
 				n = { "nzzzv", desc = "Next search result" },
@@ -119,17 +117,6 @@ return {
 				["<leader>p"] = { '"_dP', desc = "Paste without yanking" },
 				["<leader>x"] = { '"_d', desc = "Delete to void" },
 				["<leader>sw"] = { snacks_picker("grep_word"), desc = "Search selection" },
-			},
-		},
-		autocmds = {
-			diagnostic_float = {
-				{
-					event = "CursorHold",
-					desc = "Show diagnostics at cursor",
-					callback = function()
-						toggles.show_cursor_diagnostics()
-					end,
-				},
 			},
 		},
 	},

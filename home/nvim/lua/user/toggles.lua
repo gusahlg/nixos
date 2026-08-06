@@ -1,4 +1,5 @@
 local M = {}
+local paused_analyzers
 
 local function bool_text(value)
 	return value and "on" or "off"
@@ -64,21 +65,65 @@ function M.toggle_diagnostics()
 	notify(("Error detection %s"):format(bool_text(vim.diagnostic.is_enabled())))
 end
 
-function M.show_cursor_diagnostics()
-	if not vim.diagnostic.is_enabled() then
+local function enabled_analyzers()
+	local names = {}
+	local seen = {}
+	local ok, astrolsp = pcall(require, "astrolsp")
+	local configured = ok and astrolsp.config and astrolsp.config.servers or {}
+
+	for _, name in ipairs(configured) do
+		if vim.lsp.is_enabled(name) and not seen[name] then
+			seen[name] = true
+			table.insert(names, name)
+		end
+	end
+
+	-- Include clients started outside AstroLSP as long as they use Nvim's
+	-- managed LSP configuration.
+	for _, client in ipairs(vim.lsp.get_clients()) do
+		if vim.lsp.is_enabled(client.name) and not seen[client.name] then
+			seen[client.name] = true
+			table.insert(names, client.name)
+		end
+	end
+
+	table.sort(names)
+	return names
+end
+
+function M.toggle_language_analyzers()
+	if paused_analyzers then
+		local ok, err = pcall(vim.lsp.enable, paused_analyzers.names, true)
+		if not ok then
+			notify(("Could not start language analyzers: %s"):format(err), vim.log.levels.ERROR)
+			return
+		end
+
+		vim.diagnostic.enable(paused_analyzers.diagnostics_enabled)
+		paused_analyzers = nil
+		notify("Language analyzers on")
 		return
 	end
 
-	local bufnr = vim.api.nvim_get_current_buf()
-	local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-	if vim.tbl_isempty(vim.diagnostic.get(bufnr, { lnum = line })) then
+	local names = enabled_analyzers()
+	if vim.tbl_isempty(names) then
+		notify("No managed language analyzers are enabled", vim.log.levels.WARN)
 		return
 	end
 
-	vim.diagnostic.open_float(nil, {
-		focus = false,
-		scope = "cursor",
-	})
+	local state = {
+		names = names,
+		diagnostics_enabled = vim.diagnostic.is_enabled(),
+	}
+	local ok, err = pcall(vim.lsp.enable, names, false)
+	if not ok then
+		notify(("Could not stop language analyzers: %s"):format(err), vim.log.levels.ERROR)
+		return
+	end
+
+	paused_analyzers = state
+	vim.diagnostic.enable(false)
+	notify("Language analyzers off")
 end
 
 return M
