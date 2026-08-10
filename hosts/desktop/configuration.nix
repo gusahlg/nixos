@@ -36,7 +36,13 @@ in
 
   networking.hostName = "sighurt";
   networking.networkmanager.enable = true;
-  networking.firewall.enable = false;
+  networking.firewall = {
+    enable = true;
+    trustedInterfaces = [ "tailscale0" ];
+    allowedTCPPorts = [ 22 ];
+    allowedUDPPorts = [ config.services.tailscale.port ];
+    checkReversePath = "loose";
+  };
 
   time.timeZone = "Europe/Stockholm";
 
