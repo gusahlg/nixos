@@ -35,6 +35,8 @@ in
   networking = {
     hostName = "louise";
     networkmanager.enable = true;
+    # The default Wake-on-LAN policy wakes on magic packets.
+    interfaces.enp4s0.wakeOnLan.enable = true;
     firewall = {
       enable = true;
       trustedInterfaces = [ "tailscale0" ];

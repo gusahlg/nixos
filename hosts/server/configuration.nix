@@ -36,6 +36,11 @@
 
   networking.hostName = "sighurt-server";
   networking.networkmanager.enable = true;
+  # The configured policy is the NixOS default: wake on magic packets.
+  networking.interfaces.enp4s0.wakeOnLan.enable = true;
+  # This host's generated hardware configuration identifies its physical NIC
+  # as enp2s0, so enable the same policy on the interface it actually uses.
+  networking.interfaces.enp2s0.wakeOnLan.enable = true;
   networking.firewall = {
     enable = true;
     # Allow all traffic over the Tailscale interface (incl. SSH via 100.x addrs).

@@ -36,6 +36,9 @@ in
 
   networking.hostName = "sighurt";
   networking.networkmanager.enable = true;
+  # systemd configures the NIC to wake on magic packets before NetworkManager
+  # brings the connection up.
+  networking.interfaces.enp4s0.wakeOnLan.enable = true;
   networking.firewall = {
     enable = true;
     trustedInterfaces = [ "tailscale0" ];
