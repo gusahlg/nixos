@@ -112,6 +112,8 @@
     git
     wget
     curl
+    ethtool
+    wakeonlan
     htop
     fastfetch
     ripgrep

@@ -185,6 +185,8 @@ in
       swaybg
       mangohud
       gamemode
+      ethtool
+      wakeonlan 
       vim
       cargo
       rustc

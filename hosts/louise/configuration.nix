@@ -131,6 +131,8 @@ in
     winetricks
     protonup-qt
     equibop
+    ethtool
+    wakeonlan
     mangohud
     gamemode
     mpv
