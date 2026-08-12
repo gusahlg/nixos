@@ -34,7 +34,16 @@ in
 
   networking = {
     hostName = "louise";
-    networkmanager.enable = true;
+    networkmanager = {
+      enable = true;
+      # Apply WoL through NetworkManager, which manages this interface.
+      settings = {
+        "connection-wol" = {
+          "match-device" = "interface-name:enp4s0";
+          "ethernet.wake-on-lan" = "magic";
+        };
+      };
+    };
     # The default Wake-on-LAN policy wakes on magic packets.
     interfaces.enp4s0.wakeOnLan.enable = true;
     firewall = {

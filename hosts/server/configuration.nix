@@ -35,7 +35,21 @@
   boot.kernelParams = [ "consoleblank=60" ];
 
   networking.hostName = "sighurt-server";
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    # Apply WoL via NetworkManager, which otherwise overwrites the systemd
+    # link-level Wake-on-LAN policy on managed interfaces.
+    settings = {
+      "connection-wol" = {
+        "match-device" = "interface-name:enp4s0";
+        "ethernet.wake-on-lan" = "magic";
+      };
+      "connection-wol-enp2s0" = {
+        "match-device" = "interface-name:enp2s0";
+        "ethernet.wake-on-lan" = "magic";
+      };
+    };
+  };
   # The configured policy is the NixOS default: wake on magic packets.
   networking.interfaces.enp4s0.wakeOnLan.enable = true;
   # This host's generated hardware configuration identifies its physical NIC
