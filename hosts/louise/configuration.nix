@@ -66,6 +66,12 @@ in
       enable = true;
       enable32Bit = true;
     };
+    # Use the proprietary NVIDIA driver instead of the default nouveau.
+    nvidia = {
+      modesetting.enable = true;
+      powerManagement.enable = false;
+      open = false;
+    };
   };
 
   zramSwap = {
@@ -84,6 +90,7 @@ in
 
     xserver = {
       enable = true;
+      videoDrivers = [ "nvidia" ];
       xkb.layout = "se";
       desktopManager.cinnamon.enable = true;
       displayManager.lightdm.enable = true;

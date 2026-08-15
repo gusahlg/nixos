@@ -189,6 +189,7 @@ in
       xwayland
       concord.packages.${pkgs.system}.default
       rustfmt
+      librewolf
       clippy
       mpv
       python3Packages.pip
