@@ -24,7 +24,16 @@ in
     # Since I have VIA on my keyboard this is not needed
     # ../../keyboard.nix
     ../../modules/scripts.nix
+    ../../modules/wakeonlan.nix
+    ../../modules/distributed-gpu.nix
   ];
+
+  # RTX 3070 master: local CUDA plus llama.cpp talking to louise's 4060 over Ethernet.
+  distributedGpu = {
+    enable = true;
+    role = "master";
+    workerHost = "louise.local";
+  };
 
   # Defining the core system details is done in this file whilst other parts are imported instead.
   nix.settings.experimental-features = [
@@ -35,19 +44,8 @@ in
   nixpkgs.config.allowUnfree = true;
 
   networking.hostName = "sighurt";
-  networking.networkmanager = {
-    enable = true;
-    # Apply WoL through NetworkManager as well as the systemd link rule below:
-    # NetworkManager otherwise overwrites the link-level Wake-on-LAN setting.
-    settings = {
-      "connection-wol" = {
-        "match-device" = "interface-name:enp4s0";
-        "ethernet.wake-on-lan" = "magic";
-      };
-    };
-  };
-  # Retain the link-level policy for systems/services other than NetworkManager.
-  networking.interfaces.enp4s0.wakeOnLan.enable = true;
+  networking.networkmanager.enable = true;
+  # Wake-on-LAN is configured in ../../modules/wakeonlan.nix (via NetworkManager).
   networking.firewall = {
     enable = true;
     trustedInterfaces = [ "tailscale0" ];
@@ -78,6 +76,7 @@ in
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;
+    nvidiaPersistenced = true;
     open = false;
   };
 
@@ -86,7 +85,10 @@ in
     memoryPercent = 50;
   };
 
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings.PasswordAuthentication = true;
+  };
   services.printing.enable = true;
   services.dbus.enable = true;
   services.tailscale.enable = true;
@@ -198,8 +200,6 @@ in
       swaybg
       mangohud
       gamemode
-      ethtool
-      wakeonlan 
       vim
       cargo
       rustc
@@ -246,10 +246,6 @@ in
       krita
       wf-recorder
 
-      # CUDA
-      cudatoolkit
-      cudaPackages.libcublas
-
       # BLAS / LAPACK
       openblas
       blas
@@ -265,12 +261,6 @@ in
         ]
       ))
 
-      # Profiling / monitoring
-      nvtopPackages.full
-
-      (pkgs.ollama.override {
-        acceleration = "cuda";
-      })
     ])
     ++ [
       config.boot.kernelPackages.perf

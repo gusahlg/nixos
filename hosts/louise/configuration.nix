@@ -10,8 +10,16 @@ in
   imports = [
     home-manager.nixosModules.home-manager
     ../../modules/roblox.nix
+    ../../modules/wakeonlan.nix
+    ../../modules/distributed-gpu.nix
   ]
     ++ lib.optional (builtins.pathExists hardwareConfig) hardwareConfig;
+
+  # RTX 4060 worker: llama-rpc-server on LAN port 50052 for sighurt's 3070.
+  distributedGpu = {
+    enable = true;
+    role = "worker";
+  };
 
   warnings = lib.optional (!(builtins.pathExists hardwareConfig)) ''
     Louise's hardware-configuration.nix is missing. The software profile can
@@ -34,22 +42,14 @@ in
 
   networking = {
     hostName = "louise";
-    networkmanager = {
-      enable = true;
-      # Apply WoL through NetworkManager, which manages this interface.
-      settings = {
-        "connection-wol" = {
-          "match-device" = "interface-name:enp4s0";
-          "ethernet.wake-on-lan" = "magic";
-        };
-      };
-    };
-    # The default Wake-on-LAN policy wakes on magic packets.
-    interfaces.enp4s0.wakeOnLan.enable = true;
+    networkmanager.enable = true;
+    # Wake-on-LAN is configured in ../../modules/wakeonlan.nix (via NetworkManager).
     firewall = {
       enable = true;
       trustedInterfaces = [ "tailscale0" ];
       allowedTCPPorts = [ 22 ];
+      allowedUDPPorts = [ config.services.tailscale.port ];
+      checkReversePath = "loose";
     };
   };
 
@@ -70,6 +70,7 @@ in
     nvidia = {
       modesetting.enable = true;
       powerManagement.enable = false;
+      nvidiaPersistenced = true;
       open = false;
     };
   };
@@ -112,7 +113,10 @@ in
     louise = {
       isNormalUser = true;
       description = "Louise";
-      extraGroups = [ "networkmanager" ];
+      extraGroups = [
+        "networkmanager"
+        "video"
+      ];
     };
 
     gusahlg = {
@@ -137,8 +141,6 @@ in
     localNetworkGameTransfers.openFirewall = true;
   };
 
-  # Keep the local API available for maintenance/development without assuming
-  # a particular GPU acceleration backend before the hardware is known.
   services.ollama.enable = true;
 
   environment.systemPackages = with pkgs; [
@@ -149,8 +151,6 @@ in
     winetricks
     protonup-qt
     equibop
-    ethtool
-    wakeonlan
     mangohud
     gamemode
     mpv

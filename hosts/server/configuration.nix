@@ -4,6 +4,7 @@
   imports = [
     # Generate this on the target machine with: nixos-generate-config --show-hardware-config
     ./hardware-configuration.nix
+    ../../modules/wakeonlan.nix
   ];
 
   # Headless server: no GUI needed, so graphics acceleration is left off.
@@ -35,26 +36,9 @@
   boot.kernelParams = [ "consoleblank=60" ];
 
   networking.hostName = "sighurt-server";
-  networking.networkmanager = {
-    enable = true;
-    # Apply WoL via NetworkManager, which otherwise overwrites the systemd
-    # link-level Wake-on-LAN policy on managed interfaces.
-    settings = {
-      "connection-wol" = {
-        "match-device" = "interface-name:enp4s0";
-        "ethernet.wake-on-lan" = "magic";
-      };
-      "connection-wol-enp2s0" = {
-        "match-device" = "interface-name:enp2s0";
-        "ethernet.wake-on-lan" = "magic";
-      };
-    };
-  };
-  # The configured policy is the NixOS default: wake on magic packets.
-  networking.interfaces.enp4s0.wakeOnLan.enable = true;
-  # This host's generated hardware configuration identifies its physical NIC
-  # as enp2s0, so enable the same policy on the interface it actually uses.
-  networking.interfaces.enp2s0.wakeOnLan.enable = true;
+  networking.networkmanager.enable = true;
+  # Wake-on-LAN is configured in ../../modules/wakeonlan.nix (via NetworkManager).
+  # It matches every Ethernet NIC by type, so both enp4s0 and enp2s0 are covered.
   networking.firewall = {
     enable = true;
     # Allow all traffic over the Tailscale interface (incl. SSH via 100.x addrs).
@@ -131,8 +115,6 @@
     git
     wget
     curl
-    ethtool
-    wakeonlan
     htop
     fastfetch
     ripgrep
