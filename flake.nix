@@ -36,9 +36,11 @@
       url = "github:gusahlg/meander/459767a84641002f1be81ede102e6782efa71f48";
       flake = false;
     };
+
+    playit-nixos-module.url = "github:pedorich-n/playit-nixos-module";
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence, concord, gharialSrc, meanderSrc, ... }:
+  outputs = { self, nixpkgs, home-manager, impermanence, concord, gharialSrc, meanderSrc, playit-nixos-module, ... }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -100,6 +102,7 @@
       system = "x86_64-linux";
 
       modules = [
+        playit-nixos-module.nixosModules.default
         ./hosts/server/configuration.nix
       ];
     };
