@@ -7,10 +7,9 @@
     ../../modules/wakeonlan.nix
   ];
 
-  # Headless server: no GUI needed, so graphics acceleration is left off.
-  # Uncomment this together with `weston` in systemPackages below if a
-  # local graphical session is ever required.
-  # hardware.graphics.enable = true;
+  # Headless Vulkan compute still needs Mesa's ICDs exposed under
+  # /run/opengl-driver; this does not start a display server or compositor.
+  hardware.graphics.enable = true;
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -89,6 +88,11 @@
     };
   };
 
+  services.playit = {
+    enable = true;
+    secretPath = "/etc/playit/secret.toml";
+  };
+
   services.tailscale.enable = true;
 
   users.users.gusahlg = {
@@ -96,6 +100,8 @@
     extraGroups = [
       "wheel"
       "networkmanager"
+      "render"
+      "video"
     ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII3n+0ub5N5WkzhLOq0ZPZcjeDVBMrjIFDyruOEwSEcm gustav@Fredriks-Air.localdomain"
@@ -121,9 +127,104 @@
     fzf
     tmux
     fish
+
+    # Headless Vulkan inference/runtime diagnostics.
+    vulkan-loader
+    vulkan-tools
+
+    # CUDA
+    cudatoolkit
+    cudaPackages.libcublas
+
+    # `ollama` CLI on PATH for interactive use (`ollama run`, `ollama list`).
+    # The always-on daemon itself is configured via services.ollama below.
+    jq
   ];
 
   programs.fish.enable = true;
+
+  # --------------------------------------------------------------------------
+  # Local "house manager" AI
+  #
+  # A small always-on Ollama daemon plus a periodic job that asks the model to
+  # review the box and suggest maintenance. Kept deliberately lightweight so it
+  # can idle in the background 24/7 on this repurposed laptop.
+  # --------------------------------------------------------------------------
+  services.ollama = {
+    enable = true;
+    package = pkgs.ollama-cuda;
+    # Bind to localhost only. Nothing outside the box should hit the API; reach
+    # it over Tailscale by SSH-ing in, not by exposing the port.
+    host = "127.0.0.1";
+    port = 11434;
+    # Pull + keep these small models available. llama3.2:1b is ~1.3GB and runs
+    # comfortably as an always-resident manager; add more here if desired.
+    loadModels = [ "llama3.2:1b" ];
+  };
+
+  # Periodic "manager" pass: feed the model a status snapshot of the machine and
+  # log its suggestions to the journal (view with `journalctl -u ai-manager`).
+  # This is intentionally read-only/advisory — it reports, it does not act.
+  systemd.services.ai-manager = {
+    description = "Local AI house-manager maintenance pass";
+    after = [ "ollama.service" "network-online.target" ];
+    wants = [ "ollama.service" "network-online.target" ];
+    path = with pkgs; [ ollama coreutils systemd nix jq curl ];
+    serviceConfig = {
+      Type = "oneshot";
+      DynamicUser = true;
+      # Ollama listens on localhost; tell the CLI where to find it.
+      Environment = "OLLAMA_HOST=127.0.0.1:11434";
+    };
+    script = ''
+      set -euo pipefail
+
+      # Collect a compact status snapshot of the machine.
+      snapshot="$(
+        {
+          echo "== uptime =="
+          uptime || true
+          echo
+          echo "== disk =="
+          df -h / /nix 2>/dev/null || df -h /
+          echo
+          echo "== memory =="
+          free -h
+          echo
+          echo "== failed systemd units =="
+          systemctl --failed --no-legend || true
+          echo
+          echo "== nix generations to gc =="
+          nix-env --list-generations -p /nix/var/nix/profiles/system 2>/dev/null | tail -n 5 || true
+        } 2>&1
+      )"
+
+      prompt="You are the always-on manager of a headless NixOS home server.
+Below is a status snapshot. In a short bulleted list, flag anything that needs
+attention (low disk, failed services, high memory, stale generations) and
+suggest concrete maintenance commands. If everything looks healthy, say so
+briefly.
+
+$snapshot"
+
+      echo "Running AI manager pass..."
+      ollama run llama3.2:1b "$prompt" || {
+        echo "ollama run failed" >&2
+        exit 1
+      }
+    '';
+  };
+
+  systemd.timers.ai-manager = {
+    description = "Run the local AI house-manager periodically";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      # If the box was off at the scheduled time, run shortly after boot.
+      Persistent = true;
+      RandomizedDelaySec = "10m";
+    };
+  };
 
   system.stateVersion = "25.11";
 }
