@@ -41,6 +41,16 @@ in
     "flakes"
   ];
 
+  # Keep the Nix store from growing without bound: deduplicate automatically
+  # and garbage-collect generations older than 30 days weekly. (The store hit
+  # 100% disk with ~96 generations in Sep 2026 and broke nixos-rebuild.)
+  nix.settings.auto-optimise-store = true;
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   networking.hostName = "sighurt";
@@ -187,9 +197,12 @@ in
       # Cool browser.
       # surf
       claude-code
+      opencode
+      chawan
       heroic
+      herdr      
       xwayland
-      concord.packages.${pkgs.system}.default
+      concord.packages.${pkgs.stdenv.hostPlatform.system}.default
       rustfmt
       librewolf
       clippy
@@ -263,7 +276,7 @@ in
 
     ])
     ++ [
-      config.boot.kernelPackages.perf
+      pkgs.perf
     ];
 
   system.stateVersion = "25.11";

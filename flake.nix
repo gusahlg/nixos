@@ -12,7 +12,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-26.05";
+      # Track unstable alongside nixpkgs, including fish completion support.
+      url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -27,7 +28,7 @@
     # Keep the window-manager implementation pinned independently from this
     # system configuration. The lock file records the exact source revision.
     gharialSrc = {
-      url = "github:gusahlg/gharial/a6c6f14fcc2c3cdcc64fe7e13b458331b8502c2a";
+      url = "github:gusahlg/gharial/828b131d7acd2d830cc8a48ec365aedb4d1f3506";
       flake = false;
     };
 
