@@ -41,14 +41,28 @@ in
     "flakes"
   ];
 
-  # Keep the Nix store from growing without bound: deduplicate automatically
-  # and garbage-collect generations older than 30 days weekly. (The store hit
-  # 100% disk with ~96 generations in Sep 2026 and broke nixos-rebuild.)
+  # Keep ten system generations and collect unreferenced store paths daily
+  # and whenever the system profile changes.
   nix.settings.auto-optimise-store = true;
+  # Reclaim unreferenced paths during builds before the disk fills up.
+  nix.settings.min-free = 10 * 1024 * 1024 * 1024;
+  nix.settings.max-free = 30 * 1024 * 1024 * 1024;
   nix.gc = {
     automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
+    dates = "daily";
+    options = "";
+  };
+  systemd.services.nix-gc.preStart = lib.mkBefore ''
+    ${config.nix.package}/bin/nix-env \
+      --profile /nix/var/nix/profiles/system --delete-generations +10
+  '';
+  systemd.paths.nix-gc = {
+    description = "Collect old system generations when profiles change";
+    wantedBy = [ "multi-user.target" ];
+    pathConfig = {
+      PathChanged = "/nix/var/nix/profiles";
+      Unit = "nix-gc.service";
+    };
   };
 
   nixpkgs.config.allowUnfree = true;
@@ -72,6 +86,7 @@ in
   };
 
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 10;
   boot.loader.efi.canTouchEfiVariables = true;
 
   hardware.enableRedistributableFirmware = true;
