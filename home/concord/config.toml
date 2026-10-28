@@ -1,0 +1,18 @@
+# Concord — TUI Discord client. Behaviour/appearance options live here;
+# keybindings live in keymap.toml. Kept deliberately small: every section is
+# optional and unset fields fall back to concord's defaults.
+
+[display]
+show_avatars       = true
+show_images        = true
+show_custom_emoji  = true
+circular_avatars   = true
+image_preview_quality = "balanced"
+
+[credentials]
+# Use the system keychain for the Discord token when one is available,
+# falling back to a plain state file otherwise.
+store = "auto"
+
+[notifications]
+desktop_notifications = true

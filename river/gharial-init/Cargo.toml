@@ -1,0 +1,12 @@
+[package]
+name = "gharial-init-rs"
+version = "1.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "gharial-init-rs"
+path = "src/main.rs"
+
+[dependencies]
+gharial-ipc = { path = "@gharial-ipc@" }
