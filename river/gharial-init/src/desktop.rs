@@ -1,11 +1,17 @@
 //! Typed desktop policy for gharial.
+//!
+//! [`configure`] holds everything gharial keeps in memory — layout,
+//! rules, bindings — and runs again whenever the supervisor restarts the
+//! daemon. [`autostart`] launches the session's programs exactly once.
 
 use std::env;
 
 use gharial_ipc::config::{Bindings, Config, Layout};
-use gharial_ipc::{chord, ratio, Action, Client, Color, Direction};
+use gharial_ipc::{chord, ratio, Action, Client, Color, Direction, Matcher, Placement, Rule};
 
 const MOD: &str = "Super";
+
+const WALLPAPER: &str = "/etc/nixos/assets/topographic-sunset-wallpaper.png";
 
 pub fn configure(client: &Client) -> Result<(), String> {
     let home = env::var("HOME").map_err(|_| "HOME not set".to_string())?;
@@ -14,9 +20,40 @@ pub fn configure(client: &Client) -> Result<(), String> {
         .map_err(|error| error.to_string())
 }
 
+/// Programs that live for the whole session. Started once — a gharial
+/// restart must not spawn a second bar.
+pub fn autostart(client: &Client) {
+    let programs: [&[&str]; 4] = [
+        &["meander-bar"],
+        &["wl-paste", "--type", "text", "--watch", "cliphist", "store"],
+        &["wl-paste", "--type", "image", "--watch", "cliphist", "store"],
+        &["swaybg", "-i", WALLPAPER, "-m", "fill"],
+    ];
+    for argv in programs {
+        if let Err(error) = client.spawn(argv[0], &argv[1..]) {
+            eprintln!("gharial-init-rs: autostart {}: {error}", argv[0]);
+        }
+    }
+}
+
+/// Where windows go when they open. Dialogs and fixed-size windows
+/// already float on their own; these cover the rest.
+fn rules() -> Vec<Rule> {
+    vec![
+        // Video pop-outs: small, always visible, tucked into the corner.
+        Rule::new(
+            Matcher::title("Picture-in-Picture"),
+            Placement::new()
+                .floating(true)
+                .sticky(true)
+                .size(640, 360)
+                .position(-20, -20),
+        ),
+    ]
+}
+
 fn build_config(home: &str) -> Config {
     let notes = format!("{home}/Notes");
-    let wallpaper = format!("/etc/nixos/assets/topographic-sunset-wallpaper.png");
 
     let mut tofi_args = vec![
         "--drun-launch=true".to_string(),
@@ -41,6 +78,7 @@ fn build_config(home: &str) -> Config {
         .bind(chord!("Super+C"), Action::Close)
         .bind(chord!("Super+V"), Action::ToggleFloat)
         .bind(chord!("Super+F"), Action::ToggleFullscreen)
+        .bind(chord!("Super+S"), Action::ToggleSticky)
         .bind(chord!("Super+R"), Action::spawn("tofi-drun", tofi_args))
         .bind(
             chord!("Super+N"),
@@ -111,6 +149,9 @@ fn build_config(home: &str) -> Config {
             Action::spawn("playerctl", ["play-pause"]),
         );
 
+    // Directional focus/swap go to the window you see in that direction,
+    // across both screens; past the last window they hop to the screen
+    // there (Shift carries the window along).
     for &(key, direction) in &[
         ("H", Direction::Left),
         ("L", Direction::Right),
@@ -196,12 +237,7 @@ fn build_config(home: &str) -> Config {
         // kanshi owns output modes, positions, and pointer adjacency.
         // Gharial only switches focus and sends windows between outputs.
         .bindings(bindings)
-        .spawn(["meander-bar"])
-        .spawn(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
-        .spawn([
-            "wl-paste", "--type", "image", "--watch", "cliphist", "store",
-        ])
-        .spawn(["swaybg", "-i", wallpaper.as_str(), "-m", "fill"])
+        .rules(rules())
 }
 
 fn command_available(command: &str) -> bool {

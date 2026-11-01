@@ -19,7 +19,7 @@ let
   };
 
   gharialInit = pkgs.callPackage ../packages/gharial-init.nix {
-    gharialIpcSrc = "${gharialSrc}/crates/gharial-ipc";
+    inherit gharialSrc;
     src = ../river/gharial-init;
   };
 

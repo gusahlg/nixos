@@ -127,7 +127,7 @@ in
         "wheel"
         "networkmanager"
       ];
-      packages = [ concord.packages.${pkgs.system}.default ];
+      packages = [ concord.packages.${pkgs.stdenv.hostPlatform.system}.default ];
     };
   };
 

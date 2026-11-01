@@ -41,6 +41,30 @@ in
     "flakes"
   ];
 
+  # Keep ten system generations and collect unreferenced store paths daily
+  # and whenever the system profile changes.
+  nix.settings.auto-optimise-store = true;
+  # Reclaim unreferenced paths during builds before the disk fills up.
+  nix.settings.min-free = 10 * 1024 * 1024 * 1024;
+  nix.settings.max-free = 30 * 1024 * 1024 * 1024;
+  nix.gc = {
+    automatic = true;
+    dates = "daily";
+    options = "";
+  };
+  systemd.services.nix-gc.preStart = lib.mkBefore ''
+    ${config.nix.package}/bin/nix-env \
+      --profile /nix/var/nix/profiles/system --delete-generations +10
+  '';
+  systemd.paths.nix-gc = {
+    description = "Collect old system generations when profiles change";
+    wantedBy = [ "multi-user.target" ];
+    pathConfig = {
+      PathChanged = "/nix/var/nix/profiles";
+      Unit = "nix-gc.service";
+    };
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   networking.hostName = "sighurt";
@@ -62,6 +86,7 @@ in
   };
 
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 10;
   boot.loader.efi.canTouchEfiVariables = true;
 
   hardware.enableRedistributableFirmware = true;
@@ -187,9 +212,12 @@ in
       # Cool browser.
       # surf
       claude-code
+      opencode
+      chawan
       heroic
+      herdr      
       xwayland
-      concord.packages.${pkgs.system}.default
+      concord.packages.${pkgs.stdenv.hostPlatform.system}.default
       rustfmt
       librewolf
       clippy
@@ -263,7 +291,7 @@ in
 
     ])
     ++ [
-      config.boot.kernelPackages.perf
+      pkgs.perf
     ];
 
   system.stateVersion = "25.11";

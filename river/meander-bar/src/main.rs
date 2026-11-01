@@ -217,7 +217,55 @@ fn fetch_output_tags(gharial: &Gharial) -> Result<OutputTags, String> {
     }
 }
 
+/// Parse `gharialctl output list`. gharial 0.4+ prints one tab-separated
+/// line per output (`name x y width height tags focused …`, tags as `1,3`
+/// or `all`); 0.3 printed `NAME WxH+X+Y tags=0xMASK [focused]` entries
+/// joined by `;`. Both are accepted so the bar survives either daemon.
 fn parse_output_list(body: &str) -> OutputTags {
+    if body.contains('\t') {
+        parse_output_tsv(body)
+    } else {
+        parse_output_legacy(body)
+    }
+}
+
+fn parse_output_tsv(body: &str) -> OutputTags {
+    let mut result = OutputTags::default();
+    for line in body.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        // Skip a `--header` line and anything malformed.
+        let (Some(name), Some(tags), Some(focused)) = (fields.first(), fields.get(5), fields.get(6))
+        else {
+            continue;
+        };
+        let Some(tags) = parse_tag_list(tags) else {
+            continue;
+        };
+        result.by_name.insert((*name).to_string(), tags);
+        if *focused == "1" {
+            result.focused = Some((*name).to_string());
+        }
+    }
+    result
+}
+
+/// `9`, `1,3,9`, or `all` → bitmask (tag n is bit n-1).
+fn parse_tag_list(value: &str) -> Option<u32> {
+    if value == "all" {
+        return Some(u32::MAX);
+    }
+    let mut mask = 0u32;
+    for part in value.split(',') {
+        let n: u32 = part.parse().ok()?;
+        if !(1..=32).contains(&n) {
+            return None;
+        }
+        mask |= 1 << (n - 1);
+    }
+    (mask != 0).then_some(mask)
+}
+
+fn parse_output_legacy(body: &str) -> OutputTags {
     let mut result = OutputTags::default();
     for entry in body.split(';').map(str::trim) {
         if entry.is_empty() || entry == "no outputs" {
@@ -320,6 +368,29 @@ mod tests {
         assert_eq!(parse_output_list("no outputs"), OutputTags::default());
         let parsed = parse_output_list("DP-1 missing-tags; ; malformed");
         assert_eq!(parsed, OutputTags::default());
+    }
+
+    #[test]
+    fn parses_gharial_0_4_tab_separated_lines() {
+        let parsed = parse_output_list(
+            "name\tx\ty\twidth\theight\ttags\tfocused\tpresentation\tusable_x\tusable_y\tusable_width\tusable_height\n\
+             DP-2\t0\t0\t3440\t1440\t1,3\t1\tvsync\t0\t30\t3440\t1410\n\
+             HDMI-A-1\t3440\t0\t1920\t1080\t2\t0\tasync\t3440\t0\t1920\t1080",
+        );
+        assert_eq!(parsed.by_name.get("DP-2"), Some(&0x5));
+        assert_eq!(parsed.by_name.get("HDMI-A-1"), Some(&0x2));
+        assert_eq!(parsed.focused.as_deref(), Some("DP-2"));
+        assert_eq!(
+            parse_output_list("DP-1\t0\t0\t1\t1\tall\t0\tvsync\t0\t0\t1\t1")
+                .by_name
+                .get("DP-1"),
+            Some(&u32::MAX)
+        );
+        // Empty listing (no outputs yet) and garbage are ignored.
+        assert_eq!(parse_output_list(""), OutputTags::default());
+        assert_eq!(parse_output_list("DP-1\tbogus"), OutputTags::default());
+        assert_eq!(parse_tag_list("0"), None);
+        assert_eq!(parse_tag_list("33"), None);
     }
 
     #[test]
