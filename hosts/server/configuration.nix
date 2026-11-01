@@ -112,6 +112,8 @@
   security.sudo.wheelNeedsPassword = true;
 
   environment.systemPackages = with pkgs; [
+    # Updates and builds all PWC repositories before restarting watt-server.
+    (import ../../scripts/pwc-update.nix { inherit pkgs; })
     vim
     neovim
     claude-code
