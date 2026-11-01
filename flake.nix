@@ -53,8 +53,11 @@
     };
   in
   {
-    packages.${system}.llama-cpp-cuda-rpc =
-      import ./packages/llama-cpp-cuda-rpc.nix { inherit pkgs; };
+    packages.${system} = {
+      llama-cpp-cuda-rpc =
+        import ./packages/llama-cpp-cuda-rpc.nix { inherit pkgs; };
+      pwc-update = import ./scripts/pwc-update.nix { inherit pkgs; };
+    };
 
     # Manual llama.cpp checkout builds (the checklist cmake path) on NixOS.
     devShells.${system}.llama-cpp = pkgs.mkShell.override {
