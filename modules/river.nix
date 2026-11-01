@@ -1,5 +1,5 @@
 # /etc/nixos/modules/river.nix
-{ pkgs, lib, gharialSrc, meanderSrc, ... }:
+{ pkgs, lib, gharialSrc, meanderSrc, sighurtSrc, ... }:
 
 let
   font = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
@@ -16,6 +16,10 @@ let
 
   gharial = pkgs.callPackage ../packages/gharial.nix {
     src = gharialSrc;
+  };
+
+  sighurt = pkgs.callPackage ../packages/sighurt.nix {
+    src = sighurtSrc;
   };
 
   gharialInit = pkgs.callPackage ../packages/gharial-init.nix {
@@ -42,6 +46,7 @@ in
     pkgs.river
     pkgs.rio
     gharial
+    sighurt
     pkgs.qutebrowser
     pkgs.thunar
     pkgs.neovim

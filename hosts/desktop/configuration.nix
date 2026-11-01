@@ -19,6 +19,7 @@ in
   imports = [
     ./hardware-configuration.nix
     ./impermanence.nix
+    ./storage.nix
     ../../modules/river.nix
     ../../modules/roblox.nix
     # Since I have VIA on my keyboard this is not needed
@@ -44,9 +45,7 @@ in
   # Keep ten system generations and collect unreferenced store paths daily
   # and whenever the system profile changes.
   nix.settings.auto-optimise-store = true;
-  # Reclaim unreferenced paths during builds before the disk fills up.
-  nix.settings.min-free = 10 * 1024 * 1024 * 1024;
-  nix.settings.max-free = 30 * 1024 * 1024 * 1024;
+  # Build headroom and disk health monitoring are configured in storage.nix.
   nix.gc = {
     automatic = true;
     dates = "daily";

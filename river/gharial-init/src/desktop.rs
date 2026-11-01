@@ -72,7 +72,7 @@ fn build_config(home: &str) -> Config {
         .bind(chord!("Super+Q"), Action::spawn("rio", [] as [&str; 0]))
         .bind(
             chord!("Super+T"),
-            Action::spawn("qutebrowser", [] as [&str; 0]),
+            Action::spawn("sig", ["--gui"]),
         )
         .bind(chord!("Super+E"), Action::spawn("thunar", [] as [&str; 0]))
         .bind(chord!("Super+C"), Action::Close)

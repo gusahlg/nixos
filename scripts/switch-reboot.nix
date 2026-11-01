@@ -1,12 +1,16 @@
 # /etc/nixos/scripts/switch-reboot.nix
 { pkgs }:
 
+let
+  safeRebuild = import ./safe-rebuild.nix { inherit pkgs; };
+in
+
 pkgs.writeShellApplication {
   name = "switch-reboot";
 
   runtimeInputs = [
-    pkgs.nixos-rebuild
     pkgs.systemd
+    safeRebuild
   ];
 
   text = ''
@@ -20,7 +24,7 @@ pkgs.writeShellApplication {
 
     host="$1"
 
-    sudo nixos-rebuild switch --flake "/etc/nixos#$host"
+    sudo ${safeRebuild}/bin/safe-rebuild switch --flake "/etc/nixos#$host"
 
     echo "NixOS rebuild succeeded. Rebooting..."
     sudo systemctl reboot

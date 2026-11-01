@@ -38,10 +38,16 @@
       flake = false;
     };
 
+    # Sighurt, the browser bound to Super+T. Track main; flake.lock pins the commit.
+    sighurtSrc = {
+      url = "github:gusahlg/sighurt/main";
+      flake = false;
+    };
+
     playit-nixos-module.url = "github:pedorich-n/playit-nixos-module";
   };
 
-  outputs = { self, nixpkgs, home-manager, impermanence, concord, gharialSrc, meanderSrc, playit-nixos-module, ... }:
+  outputs = { self, nixpkgs, home-manager, impermanence, concord, gharialSrc, meanderSrc, sighurtSrc, playit-nixos-module, ... }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -83,7 +89,7 @@
     nixosConfigurations.sighurt = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
 
-      specialArgs = { inherit concord gharialSrc meanderSrc; };
+      specialArgs = { inherit concord gharialSrc meanderSrc sighurtSrc; };
 
       modules = [
         impermanence.nixosModules.impermanence
